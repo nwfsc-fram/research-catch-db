@@ -6,8 +6,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import Component from 'vue-class-component';
 
-export default Vue.extend({
-  name: 'PageIndex'
-})
+@Component
+export default class PageIndex extends Vue{}
 </script>
