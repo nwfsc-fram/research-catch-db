@@ -4,19 +4,19 @@
       <q-table
         :data="data"
         :columns="columns"
-        row-key="srp_number"
+        row-key="permit_number"
         selection="single"
         :selected.sync="selected"
         :filter="filter"
       >
         <template v-slot:top>
-          <q-btn flat dense color="primary" label="Add row" to="/permitdetails" @click="addRow" />
+          <q-btn flat dense color="primary" label="Add Permit" to="/permitdetails-user" @click="addRow" />
           <q-btn
             class="on-right"
             flat
             dense
             color="primary"
-            to="/permitdetails"
+            to="/permitdetails-user"
             v-if="selected.length !== 0"
             label="Edit row"
             @click="editRow"
@@ -39,23 +39,30 @@
         </template>
       </q-table>
       <div class="q-mt-md">Selected: {{ selected }}</div>
+      <div class="q-mt-md">{{ permit }}</div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
+//import { State, Action, Getter } from 'vuex-class';
+import { State } from 'vuex-class';
 import Component from 'vue-class-component';
 import { date } from 'quasar';
 import axios from 'axios';
+import { PermitState } from '../types';
 
 @Component
 export default class Permits extends Vue {
+  @State('permit') private permit!: PermitState;
+
   pagination = {
     rowsPerPage: 0
   };
   filter = '';
   selected = [];
+  data = [];
 
   addRow() {
     console.log(this.data);
@@ -66,13 +73,12 @@ export default class Permits extends Vue {
   }
 
   deleteRow() {
-    // Delete the row with the specified SRP value
-    let getStr = 'http://localhost:8080/api/delpermits/' + this.selected[0].srp_number;
-    axios
-      .get(getStr);
-    
+    // Delete the row with the specified permit value
+    let jsondata = {'permitNum': this.selected[0].permit_number };
+    axios.delete('http://localhost:8080/api/permits/', {data: jsondata});
+
     // Now that the value is deleted from the DB reload the table
-    this.selected = []
+    this.selected = [];
     axios
       .get('http://localhost:8080/api/permitsview')
       .then(response => (this.data = response.data));
@@ -80,10 +86,10 @@ export default class Permits extends Vue {
 
   columns = [
     {
-      name: 'srpNumber',
+      name: 'permitNumber',
       align: 'center',
-      label: 'SRP Numbers',
-      field: 'srp_number',
+      label: 'Permit Numbers',
+      field: 'permit_number',
       sortable: true
     },
     {
@@ -92,7 +98,7 @@ export default class Permits extends Vue {
       field: 'name',
       sortable: true
     },
-    { name: 'surveyName', label: 'Survey Name', field: 'survey_name' },
+    { name: 'projectName', label: 'Project Name', field: 'project_name' },
     { name: 'permitYear', label: 'Year', field: 'permit_year' },
     {
       name: 'startDate',
@@ -128,12 +134,11 @@ export default class Permits extends Vue {
     }
   ];
 
-  data = [];
-
   mounted() {
     axios
       .get('http://localhost:8080/api/permitsview')
       .then(response => (this.data = response.data));
   }
+  // .then(response => {console.log(response)}, error => {console.log(error);});
 }
 </script>

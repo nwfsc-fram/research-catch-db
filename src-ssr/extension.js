@@ -13,6 +13,8 @@
 
 
 const Pool = require('pg').Pool
+const express = require('express')
+
 
 const pool = new Pool({
   user: 'research_catch',
@@ -22,70 +24,134 @@ const pool = new Pool({
   port: 5432
 })
 
-const getPermitsView = (request, response) => {
+const getPermitsView = async (request, response) => {
   pool.query('SELECT * FROM research_catch."PERMITS_APP_VIEW"', (error, results) => {
     if (error) {
-      throw error
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: error.message
+      });
     }
     response.status(200).json(results.rows)
   })
 }
 
-const getGrouping = (request, response) => {
+const getGrouping = async (request, response) => {
   pool.query('SELECT * FROM research_catch."GROUPING"', (error, results) => {
     if (error) {
-      throw error
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: error.message
+      });
     }
     response.status(200).json(results.rows)
   })
 }
 
-const getOrgID = (request, response) => {
+const getOrgID = async (request, response) => {
   const orgName = request.params.orgname
-
-  console.log(orgName)
-
   pool.query('SELECT organization_id FROM "ORGANIZATION_LU" WHERE name =$1', [orgName], (error, results) => {
     if (error) {
-      throw error
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: error.message
+      });
     }
     response.status(200).json(results.rows)
   })
 }
 
-const addPermit = (request, response) => {
-  const { srpNumber, organizationId, surveyName, permitYear, startDate, endDate,
-    mortalityCreditsApplicable, pointOfContact, dataStatus, deliveryDate, issuedBy,
-    principleInvestigator, notes } = request.body
+const getOrgNames = async (request, response) => {
+  pool.query('SELECT name FROM "ORGANIZATION_LU"', (error, results) => {
+    if (error) {
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: error.message
+      });
+    }
+    response.status(200).json(results.rows)
+  })
+}
 
-  pool.query('INSERT INTO "RESEARCH_PROJECT" VALUES (INSERT INTO "RESEARCH_PROJECT" VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14))',
-    [srpNumber, organizationId, surveyName, permitYear, startDate, endDate,
-      mortalityCreditsApplicable, pointOfContact, dataStatus, deliveryDate, issuedBy,
-      principleInvestigator, notes], (error, result) => {
+const getMaxResearchId = async (request, response) => {
+  pool.query('SELECT max(research_project_id) FROM "RESEARCH_PROJECT"', (error, results) => {
+    if (error) {
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: error.message
+      });
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+// Taking dates out, but ultimately need to put that back in
+const addPermit = async (request, response) => {
+  const result = {
+    researchProjectId: request.body.researchProjectId,
+    permitNumber: request.body.permitNumber,
+    organizationId: request.body.organizationId,
+    projectName: request.body.projectName,
+    permitYear: request.body.permitYear,
+    startDate: request.body.startDate,
+    endDate: request.body.endDate,
+    mortalityCreditsApplicable: request.body.mortalityCreditsApplicable,
+    pointOfContact: request.body.pointOfContact,
+    dataStatus: request.body.dataStatus,
+    deliveryDate: request.body.deliveryDate,
+    issuedBy: request.body.issuedBy,
+    principleInvestigator: request.body.principleInvestigator,
+    notes: request.body.notes
+  }
+
+  pool.query('INSERT INTO "RESEARCH_PROJECT" VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)',
+    [result.researchProjectId, result.permitNumber, result.organizationId,
+      result.projectName, result.permitYear, result.startDate,
+      result.endDate, result.mortalityCreditsApplicable, result.pointOfContact,
+      result.dataStatus, result.deliveryDate, result.issuedBy,
+      result.principleInvestigator, result.notes], (error, result) => {
       if (error) {
-        throw error
+        console.error(error.stack);
+        response.status(401).json({
+          status: 401,
+          message: error.message
+        });
       }
-      response.status(201).send(`Permit added with ID: ${result.insertId}`)
+      // this isn't returning anything, not sure why since this example is in the docs...
+      else {
+        response.status(201).send(`Permit row added: ${result.rows[0]}`)
+      }
     })
 }
 
-  // const updatePermit = (request, response) => {
-  //   const { srpNum, updateFields } = request.body
+// const updatePermit = (request, response) => {
+//   const { permitNum, updateFields } = request.body
 
-  //   // Could do some error catching here for an empty updateFields
-  //   sqlString = 'UPDATE "RESEARCH_PROJECT" SET survey_name = \'regular size crabs\'
-  //   WHERE srp_number = \'SRP-04-2011\''
-  // }
+//   // Could do some error catching here for an empty updateFields
+//   sqlString = 'UPDATE "RESEARCH_PROJECT" SET project_name = \'regular size crabs\'
+//   WHERE permit_number = \'permit-04-2011\''
+// }
 
 const deletePermit = (request, response) => {
-  const srpnum = request.params.srpnum
+  const result = {
+    permitNum: request.body.permitNum
+  };
 
-  console.log(srpnum)
-
-  pool.query('DELETE FROM "RESEARCH_PROJECT" WHERE srp_number = $1',
-    [srpnum], (error, result) => {
+  pool.query('DELETE FROM "RESEARCH_PROJECT" WHERE permit_number = $1',
+    [result.permitNum], (error, result) => {
       if (error) {
-        throw error
+        // this doesn't really get used as postgres doesn't return an error when
+        // there's no matching row, it just just doesn't do anything.
+        console.error(error.stack);
+        response.status(404).json({
+          status: 404,
+          message: error.message
+        });
       }
       response.status(201).send(`Permit deleted with ID: ${result.insertId}`)
     })
@@ -98,9 +164,13 @@ module.exports.extendApp = function ({ app, ssr }) {
 
      Example: app.use(), app.get() etc
   */
+
+  app.use(express.json());
   app.get('/api/permitsview', getPermitsView)
   app.get('/api/grouping', getGrouping)
   app.get('/api/getOrgId/:orgname', getOrgID)
+  app.get('/api/orgNames', getOrgNames)
+  app.get('/api/maxResearchId', getMaxResearchId)
   app.post('/api/permits', addPermit)
-  app.get('/api/delpermits/:srpnum', deletePermit)
+  app.delete('/api/permits', deletePermit)
 }

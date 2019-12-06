@@ -1,6 +1,7 @@
 import { RouteConfig } from 'vue-router';
 import Permits from '../pages/Permits.vue';
-import PermitDetails from '../pages/PermitDetails.vue';
+import PermitDetailsUser from '../pages/PermitDetailsUser.vue';
+import PermitDetailsStaff from '../pages/PermitDetailsStaff.vue';
 
 
 const routes: RouteConfig[] = [
@@ -10,7 +11,8 @@ const routes: RouteConfig[] = [
     children: [
       { path: '', component: () => import('pages/Index.vue') },
       { path: '/permits', name: 'Permits', component: Permits},
-      { path: '/permitdetails', name: 'PermitDetails', component: PermitDetails}
+      { path: '/permitdetails-user', name: 'PermitDetailsUser', component: PermitDetailsUser},
+      { path: '/permitdetails-staff', name: 'PermitDetailsStaff', component: PermitDetailsStaff}
     ]
   }
 ]
