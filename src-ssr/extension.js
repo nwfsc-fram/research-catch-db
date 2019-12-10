@@ -14,15 +14,9 @@
 
 const Pool = require('pg').Pool
 const express = require('express')
+const dbConfig = require('./dbconfig').dbConfig;
 
-
-const pool = new Pool({
-  user: 'research_catch',
-  host: 'nwcdbp24.nwfsc.noaa.gov',
-  database: 'framdev',
-  password: 'redacted',
-  port: 5432
-})
+const pool = new Pool(dbConfig)
 
 const getPermitsView = async (request, response) => {
   pool.query('SELECT * FROM research_catch."PERMITS_APP_VIEW"', (error, results) => {
