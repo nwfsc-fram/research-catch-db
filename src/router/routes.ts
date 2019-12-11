@@ -3,7 +3,6 @@ import Permits from '../pages/Permits.vue';
 import PermitDetailsUser from '../pages/PermitDetailsUser.vue';
 import PermitDetailsStaff from '../pages/PermitDetailsStaff.vue';
 
-
 const routes: RouteConfig[] = [
   {
     path: '/',

@@ -140,5 +140,11 @@ export default class Permits extends Vue {
       .then(response => (this.data = response.data));
   }
   // .then(response => {console.log(response)}, error => {console.log(error);});
+  
+  // .then(response => {return const data = response.json(); })
+  // .then(data => console.log(data));
+
+  // .then(response => {return const data = response.json(); })
+  // .then(data => {const resultArray = []; for (let key in data) {resultArray.push(data[key]);}this.users = resultArray});
 }
 </script>

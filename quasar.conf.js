@@ -50,7 +50,9 @@ module.exports = function (ctx) {
       directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: [
+        'LocalStorage'
+      ]
     },
 
     // https://quasar.dev/quasar-cli/cli-documentation/supporting-ie
@@ -84,6 +86,15 @@ module.exports = function (ctx) {
     devServer: {
       // https: true,
       // port: 8080,
+      proxy: {
+        // proxy all requests starting with /api to jsonplaceholder
+        '/api/v1': {
+          target: 'https://localhost:9000',
+          changeOrigin: true,
+          pathRewrite: {
+            '^/api/v1': ''
+          }
+        }},
       open: true // opens browser window automatically
     },
 
