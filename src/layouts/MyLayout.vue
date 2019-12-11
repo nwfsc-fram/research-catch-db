@@ -72,13 +72,12 @@
             <q-item-label caption>@quasarframework</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item clickable tag="a" target="_blank" href="https://facebook.quasar.dev">
+        <q-item to="/permits" exact>
           <q-item-section avatar>
-            <q-icon name="public" />
+            <q-icon name="list" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Facebook</q-item-label>
-            <q-item-label caption>@QuasarFramework</q-item-label>
+            <q-item-label>Permits</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
@@ -92,14 +91,10 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import Component from 'vue-class-component';
 
-export default Vue.extend({
-  name: 'MyLayout',
-
-  data () {
-    return {
-      leftDrawerOpen: false
-    }
-  }
-})
+@Component
+export default class MyLayout extends Vue{
+  leftDrawerOpen = false;
+}
 </script>
