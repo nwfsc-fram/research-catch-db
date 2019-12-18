@@ -19,10 +19,6 @@ export function updateStartDate (state, newVal) {
   state.permit['start_date'] = newVal;
 }
 
-export function updateStartDate (state, newVal) {
-  state.permit['start_date'] = newVal;
-}
-
 export function updateEndDate (state, newVal) {
   state.permit['end_date'] = newVal;
 }

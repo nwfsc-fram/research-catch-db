@@ -67,7 +67,7 @@ export default class Permits extends Vue {
   selected = [];
   data = [];
   columns = [];
-  poweruser = false;
+  poweruser = true;
 
   addRow() {
     console.log(this.data);
