@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 
 // we first import the module
-import permit from './permit'
+import sPermit from './sPermit'
 
 Vue.use(Vuex)
 
@@ -10,7 +10,7 @@ export default function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
     modules: {
       // then we reference it
-      permit
+      sPermit
     },
 
     // enable strict mode (adds overhead!)
@@ -26,9 +26,9 @@ export default function (/* { ssrContext } */) {
   */
 
   if (process.env.DEV && module.hot) {
-    module.hot.accept(['./permit'], () => {
-      const newPermit = require('./permit').default
-      Store.hotUpdate({ modules: { permit: newPermit } })
+    module.hot.accept(['./sPermit'], () => {
+      const newPermit = require('./sPermit').default
+      Store.hotUpdate({ modules: { sPermit: newPermit } })
     })
   }
 
