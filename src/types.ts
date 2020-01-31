@@ -3,10 +3,10 @@ export interface RootState {
 }
 
 export interface SelectedPermit { 
-  'permit_number': string,
+  'permit_number': string | null,
   'organization_name': string,
   'project_name': string,
-  'permit_year': number,
+  'permit_year': number | null,
   'start_date': string,
   'end_date': string,
   'mortality_credits_applicable': boolean,

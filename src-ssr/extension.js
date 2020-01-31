@@ -32,8 +32,22 @@ const getPermitsView = async (request, response) => {
   })
 }
 
-const getGrouping = async (request, response) => {
-  pool.query('SELECT * FROM research_catch."GROUPING"', (error, results) => {
+const getGroupingList = async (request, response) => {
+  pool.query('SELECT grouping_name FROM research_catch."GROUPING"', (error, results) => {
+    if (error) {
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: error.message
+      });
+    } else {
+      response.status(200).json(results.rows)
+    }
+  })
+}
+
+const getSpeciesList = async (request, response) => {
+  pool.query('SELECT common_name FROM research_catch."SPECIES_LU"', (error, results) => {
     if (error) {
       console.error(error.stack);
       response.status(401).json({
@@ -60,6 +74,22 @@ const getOrgNames = async (request, response) => {
   })
 }
 
+// Get permit id value for a given permit name
+const getPermitId = async (request, response) => {
+  pool.query('SELECT research_project_id FROM "RESEARCH_PROJECT" WHERE permit_number = $1', 
+    [request.body.permit_number], (error, results) => {
+      if (error) {
+        console.error(error.stack);
+        response.status(401).json({
+          status: 401,
+          message: error.message
+        });
+      } else {
+        response.status(200).json(results.rows)
+      }
+    })
+}
+
 // Get the maximum used research id value
 async function getMaxResearchId() {
   let output = null;
@@ -72,16 +102,39 @@ async function getMaxResearchId() {
   return output.rows[0];
 }
 
+// Get the maximum used organization id
+async function getMaxOrgId() {
+  let output = null;
+  try {
+    output = await pool.query('SELECT max(organization_id) FROM "ORGANIZATION_LU"')
+  } catch (err) {
+    console.log(err.stack);
+  }
+
+  return output.rows[0];
+}
+
 // Get an org id value for a given org name
 async function getOrgId(orgName) {
   let output = null;
-  try{
+  try {
     output = await pool.query('SELECT organization_id FROM "ORGANIZATION_LU" WHERE name =$1', [orgName]);
   } catch (err) {
     console.log(err.stack);
   }
 
   return output.rows[0];
+}
+
+// Add a new org to the org lookup table
+async function addOrg(orgId, orgName) {
+  let output = null;
+  try {
+    output = await pool.query('INSERT INTO "ORGANIZATION_LU" VALUES ($1, $2)',
+      [orgId, orgName])
+  } catch (err) {
+    console.log(err.stack);
+  }
 }
 
 // Get a user id value for a given email
@@ -125,13 +178,22 @@ const updatePermit = async (request, response) => {
   // This function should be able to handle any possible changes to
   // the research_project table, this means a lot of field handleing
   // and translating values to ids 
+  // TODO: refactor this so it's putting together the query using
+  // the actual variables plugged into the query call
   for (const kset of entries) {
+    if (kset[1] === null) {
+      continue;
+    }
     if (kset[0] === 'organization_name') {
       try{
         orgReturn = await getOrgId(kset[1]);
         sqlString = sqlString.concat('organization_id=', orgReturn['organization_id'], ',');
       } catch (err) {
-        console.log(err.stack);
+        console.error(err.stack);
+        response.status(401).json({
+        status: 401,
+        message: err.message
+        })
       }
     }
     else if (kset[0] === 'email_address') {
@@ -154,13 +216,16 @@ const updatePermit = async (request, response) => {
     else if (['permit_year', 'mortality_credits_applicable'].includes(kset[0])) {
       sqlString = sqlString.concat(kset[0],'=',kset[1],',')
     }
-    else if (kset[0] != 'permit_number') {
+    else if (['notes', 'staff_notes', 'principle_investigator', 'issued_by', 'project_name'].includes(kset[0])) {
+      sqlString = sqlString.concat(kset[0],'=\'',kset[1].replace(/\'/g,'\'\''),'\',')
+    }
+    else {
       sqlString = sqlString.concat(kset[0],'=\'',kset[1],'\',')
     }
   }
 
   sqlString = sqlString.slice(0, -1)
-  sqlString = sqlString.concat(' WHERE permit_number = \'',request.body.permit_number,'\'')
+  sqlString = sqlString.concat(' WHERE research_project_id = \'',request.body.research_project_id,'\'')
 
   // Final query to update the row in the DB
   pool.query(sqlString, [], (error, result) => {
@@ -187,32 +252,45 @@ meaningful field values to their id values when appropriate
 */
 const addPermit = async (request, response) => {
   const result = {
-    permitNumber: request.body.permitNumber,
-    organizationName: request.body.organizationName,
-    projectName: request.body.projectName,
-    permitYear: request.body.permitYear,
-    startDate: request.body.startDate,
-    endDate: request.body.endDate,
-    mortalityCreditsApplicable: request.body.mortalityCreditsApplicable,
+    permitNumber: request.body.permit_number,
+    organizationName: request.body.organization_name,
+    newOrg: request.body.new_org,
+    projectName: request.body.project_name,
+    permitYear: request.body.permit_year,
+    startDate: request.body.start_date,
+    endDate: request.body.end_date,
+    mortalityCreditsApplicable: request.body.mortality_credits_applicable,
+    pointOfContact: request.body.point_of_contact,
     email: request.body.email,
-    dataStatus: request.body.dataStatus,
-    deliveryDate: request.body.deliveryDate,
-    issuedBy: request.body.issuedBy,
-    principleInvestigator: request.body.principleInvestigator,
-    notes: request.body.notes
+    dataStatus: request.body.data_status_id,
+    issuedBy: request.body.issued_by,
+    principleInvestigator: request.body.principle_investigator,
+    notes: request.body.notes,
+    staffNotes: request.body.staff_notes
   }
   // Get a new unused number for the research_project_id value
   let maxReturn = await getMaxResearchId();
-  let researchProjectId = Number(maxReturn['max']) + 1
+  let researchProjectId = Number(maxReturn['max']) + 1;
+
+  // Create new organization entry if needed
+  if (result.newOrg) {
+    let maxOrgReturn = await getMaxOrgId();
+    result.organizationId = Number(maxOrgReturn['max']) + 1;
+    let newReturn = null;
+    try {
+      newReturn = addOrg(result.organizationId, result.newOrg)
+    } catch (err) {
+      console.log(err.stack);
+    }
+  }
 
   // Translate values to Ids
   let orgReturn = null;
   let userReturn = null;
-  let statusReturn = null;
   if (result.organizationName) {
     try{
       orgReturn = await getOrgId(result.organizationName);
-      result.organizationID = orgReturn['organization_id'];
+      result.organizationId = orgReturn['organization_id'];
     } catch (err) {
       console.log(err.stack);
     }
@@ -225,33 +303,27 @@ const addPermit = async (request, response) => {
       console.log(err.stack);
     }
   }
-  if (result.dataStatus) {
-    try{
-      statusReturn = await getStatusId(result.dataStatus);
-      result.dataStatusId = statusReturn['data_status_id'];
-    } catch (err) {
-      console.log(err.stack);
-    }
-  }
 
-  pool.query('INSERT INTO "RESEARCH_PROJECT" VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)',
-    [researchProjectId, result.permitNumber, result.organizationId,
-      result.projectName, result.permitYear, result.startDate,
-      result.endDate, result.mortalityCreditsApplicable, result.pointOfContact,
-      result.dataStatusId, result.deliveryDate, result.issuedBy,
-      result.principleInvestigator, result.notes], (error, result) => {
-      if (error) {
-        console.error(error.stack);
-        response.status(401).json({
-          status: 401,
-          message: error.message
-        });
-      }
-      // this isn't returning anything, not sure why since this example is in the docs...
-      else {
-        response.status(201).send(`Permit row added: ${result.rows[0]}`)
-      }
-    })
+  pool.query('INSERT INTO "RESEARCH_PROJECT" (research_project_id, permit_number, organization_id, project_name, '
+    + 'permit_year, start_date, end_date, mortality_credits_applicable, point_of_contact, data_status_id, '
+    + 'issued_by, principle_investigator, notes, staff_notes) ' 
+    + 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)',
+  [researchProjectId, result.permitNumber, result.organizationId, result.projectName, 
+    result.permitYear, result.startDate, result.endDate, result.mortalityCreditsApplicable, 
+    result.pointOfContact, result.dataStatus, result.issuedBy, result.principleInvestigator, 
+    result.notes, result.staffNotes], (error, result) => {
+    if (error) {
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: error.message
+      });
+    }
+    // this isn't returning anything, not sure why since this example is in the docs...
+    else {
+      response.status(201).send(`Permit row added: ${result.rows[0]}`)
+    }
+  })
 }
 
 const deletePermit = (request, response) => {
@@ -284,8 +356,10 @@ module.exports.extendApp = function ({ app, ssr }) {
 
   app.use(express.json());
   app.get('/api/permitsview', getPermitsView)
-  app.get('/api/grouping', getGrouping)
+  app.get('/api/grouping', getGroupingList)
+  app.get('/api/species', getSpeciesList)
   app.get('/api/orgNames', getOrgNames)
+  app.post('/api/permitid', getPermitId)
   app.post('/api/permits', addPermit)
   app.put('/api/permits', updatePermit)
   app.delete('/api/permits', deletePermit)
