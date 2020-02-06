@@ -1,9 +1,10 @@
 export default {
   permit: {
-    'permit_number': '',
+    'research_project_id': 0,
+    'permit_number': null,
     'organization_name': '',
     'project_name': '',
-    'permit_year': 9999,
+    'permit_year': null,
     'start_date': '',
     'end_date': '',
     'mortality_credits_applicable': false,
@@ -14,5 +15,6 @@ export default {
     'principle_investigator': '',
     'notes': '',
     'staff_notes': ''
-  }
+  },
+  new: false
 };

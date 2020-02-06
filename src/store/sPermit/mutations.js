@@ -1,6 +1,17 @@
-
 export function updateSPermit (state, newVal) {
   state.permit = newVal;
+}
+
+export function updateNew (state, newVal) {
+  state.new = newVal;
+}
+
+export function updateProjectId (state, newVal) {
+  state.permit['research_project_id'] = newVal;
+}
+
+export function updatePermitNum (state, newVal) {
+  state.permit['permit_number'] = newVal;
 }
 
 export function updateOrg (state, newVal) {
@@ -57,10 +68,10 @@ export function updateStaffNotes (state, newVal) {
 
 export function clearSPermit (state) {
   state.permit =  {
-    'permit_number': '',
+    'permit_number': null,
     'organization_name': '',
     'project_name': '',
-    'permit_year': 9999,
+    'permit_year': null,
     'start_date': '',
     'end_date': '',
     'mortality_credits_applicable': false,

@@ -9,6 +9,7 @@
         :selected.sync="selected"
         :filter="filter"
         @selection="newSelection"
+        :pagination.sync="pagination"
       >
         <template v-slot:top>
           <q-btn
@@ -17,7 +18,7 @@
             v-if="poweruser"
             color="primary"
             label="Add Permit"
-            to="/permitdetails-user"
+            to="/permitdetails-staff"
             @click="addRow"
           />
           <q-btn
@@ -25,9 +26,9 @@
             flat
             dense
             color="primary"
-            :to="permitDetailsPage"
             v-if="selected.length !== 0"
-            label="Edit Permit"
+            label="Submit Catch Data"
+            @click="editRow"
           />
           <q-btn
             class="on-right"
@@ -36,8 +37,21 @@
             color="primary"
             label="Delete Permit"
             v-if="(selected.length !== 0) && poweruser"
-            @click="deleteRow"
+            @click="confirm = true"
           />
+          <q-dialog v-model="confirm" persistent>
+            <q-card>
+              <q-card-section class="row items-center">
+                <q-avatar color="primary" text-color="white" />
+                <span class="q-ml-sm">Do you really want to remove the permit entry for {{ permit['permit_number'] }}</span>
+              </q-card-section>
+
+              <q-card-actions align="center">
+                <q-btn flat label="Confirm" color="primary" @click="deleteRow" v-close-popup />
+                <q-btn flat label="Cancel" color="primary" v-close-popup />
+              </q-card-actions>
+            </q-card>
+          </q-dialog>
           <q-space />
           <q-input rounded outlined dense debounce="300" color="primary" v-model="filter">
             <template v-slot:append>
@@ -47,6 +61,7 @@
         </template>
       </q-table>
       <div class="q-mt-md">Vuex store has: {{ permit }}</div>
+      <div class="q-mt-md">Is New: {{ isNew.toString() }}</div>
     </div>
   </div>
 </template>
@@ -61,22 +76,44 @@ import axios from 'axios';
 @Component
 export default class Permits extends Vue {
   pagination = {
-    rowsPerPage: 0
+    rowsPerPage: 10,
+    sortBy: 'permitYear',
+    descending: true
   };
   filter = '';
+  // TODO: import typing for this
   selected = [];
   data = [];
-  columns = [];
-  poweruser = true;
+  columns : object[] = [];
+  confirm = false;
+  poweruser = false;
 
   addRow() {
-    console.log(this.data);
+    // clear vuex store
+    this.$store.commit('sPermit/clearSPermit');
+    this.$store.commit('sPermit/updateNew', true);
   }
 
-  deleteRow() {
+  async editRow() {
+    try {
+      let output = await axios.post('http://localhost:8080/api/permitid', {'permit_number': this.permit.permit_number})
+      this.projectId = output.data[0]['research_project_id']
+
+      if (this.poweruser) {
+        this.$router.push('/permitdetails-staff');
+      } else {
+        this.$router.push('/permitdetails-user');
+      }
+    } catch (error) {
+      console.log('error', error);
+      //display some error
+    } 
+  }
+
+  async deleteRow() {
     // Delete the row with the specified permit value
     let jsondata = { permitNum: this.selected[0].permit_number };
-    axios.delete('http://localhost:8080/api/permits/', { data: jsondata });
+    await axios.delete('http://localhost:8080/api/permits/', { data: jsondata });
 
     // Now that the value is deleted from the DB reload the table
     this.selected = [];
@@ -88,6 +125,7 @@ export default class Permits extends Vue {
   newSelection(details) {
     if (details.added) {
       this.$store.commit('sPermit/updateSPermit', details.rows[0]);
+      
     }
   }
 
@@ -107,7 +145,7 @@ export default class Permits extends Vue {
         sortable: true
       },
       { name: 'projectName', label: 'Project Name', field: 'project_name' },
-      { name: 'permitYear', label: 'Year', field: 'permit_year' },
+      { name: 'permitYear', label: 'Year', field: 'permit_year', sortable:true },
       {
         name: 'principleInvestigator',
         label: 'Principle Investigator',
@@ -157,12 +195,6 @@ export default class Permits extends Vue {
           sortable: true
         },
         {
-          name: 'dataStatus',
-          label: 'Data Status',
-          field: 'data_status',
-          sortable: true
-        },
-        {
           name: 'issuedBy',
           label: 'Issued By',
           field: 'issued_by',
@@ -181,13 +213,22 @@ export default class Permits extends Vue {
   get permit() {
     return this.$store.state.sPermit.permit;
   }
+  set permit(value) {
+    this.$store.commit('sPermit/updateSPermit', value);
+  }
+  get projectId() {
+    return this.$store.state.sPermit.permit.research_project_id;
+  }
+  set projectId(value) {
+    this.$store.commit('sPermit/updateProjectId', value);
+  }
 
-  get permitDetailsPage() {
-    if (this.poweruser) {
-      return '/permitdetails-staff';
-    } else {
-      return '/permitdetails-user';
-    }
+  //temp
+  get isNew() {
+    return this.$store.state.sPermit.new;
+  }
+  set isNew(value) {
+    this.$store.commit('sPermit/updateNew', value);
   }
 
   mounted() {
@@ -195,6 +236,7 @@ export default class Permits extends Vue {
       .get('http://localhost:8080/api/permitsview')
       .then(response => (this.data = response.data));
     this.assignColumns();
+    this.isNew = false;
   }
   // .then(response => {console.log(response)}, error => {console.log(error);});
 
