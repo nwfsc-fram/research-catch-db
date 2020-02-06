@@ -92,8 +92,8 @@
             <br />
             <div class="row justify-start q-gutter-sm">
               <div class="col-3">Microsoft Excel File Upload</div>
-              <q-file @change="ingestExcel($event)" class="col-6" outlined v-model="excelFile"/>
-              <q-btn class="col-1" color="primary" label="Download Template" />
+              <q-file @input="startIngest($event)" class="col-6" outlined v-model="excelFile" />
+              <q-btn class="col-2" color="primary" label="Download Template" @click="downloadTemplate"/>
             </div>
             <br />
             <q-separator color="primary" />
@@ -134,19 +134,32 @@
                 />
               </div>
             </div>
-            <q-table :data="data" :columns="columns">
+            <q-table
+              :data="data"
+              :columns="columns"
+              :loading="tableLoading"
+              :row-key="row => row.grouping.concat(':', row.species)"
+            >
               <template v-slot:body="props">
                 <q-tr :props="props">
-                  <q-td key="species" :props="props">
-                    {{ props.row.species }}
-                    <q-popup-edit v-model="props.row.species" title="Update Species" buttons>
-                      <q-select v-model="props.row.species" dense autofocus :options="speciesList"/>
-                    </q-popup-edit>
-                  </q-td>
-                  <q-td key="grouping" :props="props">
+                  <q-td
+                    key="grouping"
+                    :props="props"
+                    :style="groupingSpeciesList.includes(props.row.grouping.concat(props.row.species)) ? '' : `color:red;`"
+                  >
                     <div class="text-pre-wrap">{{ props.row.grouping }}</div>
                     <q-popup-edit v-model="props.row.grouping">
-                       <q-select v-model="props.row.grouping" dense autofocus :options="groupingList"/>
+                      <q-select v-model="props.row.grouping" :options="groupingList" />
+                    </q-popup-edit>
+                  </q-td>
+                  <q-td
+                    key="species"
+                    :props="props"
+                    :style="groupingSpeciesList.includes(props.row.grouping.concat(props.row.species)) ? '' : `color:red;`"
+                  >
+                    {{ props.row.species }}
+                    <q-popup-edit v-model="props.row.species" title="Update Species" buttons>
+                      <q-select v-model="props.row.species" dense autofocus :options="speciesList" />
                     </q-popup-edit>
                   </q-td>
                   <q-td key="totalCatch" :props="props">
@@ -169,26 +182,34 @@
                   <q-td key="depthCaptured" :props="props">
                     <div class="text-pre-wrap">{{ props.row.depthCaptured }}</div>
                     <q-popup-edit v-model="props.row.depthCaptured">
-                      <q-select v-model="props.row.depthCaptured" dense autofocus :options="depthBinList"/>
+                      <q-select
+                        v-model="props.row.depthCaptured"
+                        dense
+                        autofocus
+                        :options="depthBinList"
+                      />
                     </q-popup-edit>
                   </q-td>
-                  <q-td key="released" :props="props">
+                  <q-td auto-width key="released" :props="props">
                     <div class="text-pre-wrap">{{ props.row.released }}</div>
                     <q-popup-edit v-model="props.row.released">
                       <q-input type="text" v-model="props.row.released" dense autofocus />
                     </q-popup-edit>
                   </q-td>
-                  <q-td key="notes" :props="props">
-                    <div class="text-pre-wrap">{{ props.row.notes }}</div>
+                  <q-td auto-width key="notes" :props="props">
+                    <div class="my-table-details">{{ props.row.notes }}</div>
                     <q-popup-edit v-model="props.row.notes">
-                      <q-input type="textarea" v-model="props.row.notes" dense autofocus />
+                      <q-input type="textarea" v-model="props.row.notes" />
                     </q-popup-edit>
                   </q-td>
                 </q-tr>
               </template>
             </q-table>
-            <br>
-            <q-btn color="primary" label="Add Row" @click="addRow"/>
+            <br />
+            <div class="row">
+            <q-btn color="primary" label="Add Row" @click="addRow" />
+            <q-btn color="positive" label="Submit Catch Data" @click="submitCatch" :disable="data.length < 1"/>
+            </div>
           </q-tab-panel>
         </q-tab-panels>
 
@@ -224,15 +245,14 @@
                 <br />4. Only applies to Canary rockfish, Yelloweye rockfish, & Cowcod
               </p>
             </q-card>
-            <br>
-             <q-btn color="primary" class="justify-center" @click="updatePermitInfo">Save</q-btn>
+            <br />
+            <q-btn color="primary" class="justify-center" @click="updatePermitInfo">Save</q-btn>
           </q-tab-panel>
         </q-tab-panels>
       </q-card>
     </div>
     <br />
 
-   
     <br />
     <br />
     <q-card class="bg-green" v-if="saveSuccesfulBlock">
@@ -245,6 +265,7 @@
         <div>Save unsucessful</div>
       </q-card-section>
     </q-card>
+    <div>{{ tempInsert }}</div>
     <br />
   </div>
 </template>
@@ -252,9 +273,19 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { date } from 'quasar';
+import { date, exportFile } from 'quasar';
 import axios from 'axios';
+import fs from 'fs';
 import XLSX from 'xlsx';
+
+interface TableRow {
+  grouping: string | undefined;
+  species: string | undefined;
+  totalCatch: number | undefined;
+  depthCapture: number | undefined;
+  released: string | undefined;
+  notes: string;
+}
 
 @Component
 export default class Permits extends Vue {
@@ -264,37 +295,41 @@ export default class Permits extends Vue {
   email = 'trogdor@noaa.gov';
   dataURL = null;
   excelFile = null;
+  tableLoading = false;
   weights = true;
   dense = false;
+  catchData = [];
   tab = 'permitDetails';
   saveSuccesfulBlock = false;
   saveFailedBlock = false;
   groupingList = null;
   speciesList = null;
-  depthBinList = ['NA','0-10','10-20','20-30','30-50','30-50','50-100','>100']
-
-  data = [
-    {
-      species: 'Arrowtooth Flounder',
-      grouping: 'Arrowtooth Flounder',
-      totalCatch: 0.0173,
-      depthCapture: null,
-      released: null,
-      notes: ''
-    }
+  groupingSpeciesList = [];
+  tempInsert = null;
+  depthBinList = [
+    'NA',
+    '0-10',
+    '10-20',
+    '20-30',
+    '30-50',
+    '30-50',
+    '50-100',
+    '>100'
   ];
+
+  data: TableRow[] = [];
   columns = [
+    {
+      name: 'grouping',
+      label: 'Grouping',
+      field: 'grouping',
+      sortable: true
+    },
     {
       name: 'species',
       align: 'center',
       label: 'Species',
       field: 'species',
-      sortable: true
-    },
-    {
-      name: 'grouping',
-      label: 'Grouping',
-      field: 'grouping',
       sortable: true
     },
     {
@@ -340,32 +375,90 @@ export default class Permits extends Vue {
       });
   }
 
-  ingestExcel(event) {
-    let f = event.target.files[0]
-    let reader = new FileReader();
-    //let cats;
-    
-    reader.onload = function(e) {
-      let data = new Uint8Array(e.target.result);
-      var workbook = XLSX.read(data, {type: 'array'});
-      let worksheet = workbook.Sheets[workbook.SheetNames[1]];
-      let cats = XLSX.utils.sheet_to_json(worksheet, {header:1});
-      console.log(JSON.stringify(cats));
+  ingestExcel(event, callback) {
+    if (this.excelFile) {
+      let f = this.excelFile;
+      let reader = new FileReader();
+      reader.onload = callback;
+      reader.readAsArrayBuffer(f!);
     }
-    reader.readAsArrayBuffer(f);
-    
+  }
+
+  startIngest(e) {
+    this.tableLoading = true;
+    this.ingestExcel(e, this.handleLoading);
+    this.tableLoading = false;
+  }
+
+  handleLoading(e) {
+    let data = new Uint8Array(e.target.result);
+    var workbook = XLSX.read(data, { type: 'array' });
+    let worksheet = workbook.Sheets[workbook.SheetNames[1]];
+    this.catchData = XLSX.utils.sheet_to_json(worksheet, {
+      header: [
+        'grouping',
+        'species',
+        'totalCatch',
+        'depthCapture',
+        'released',
+        'notes'
+      ]
+    });
+    this.data = this.catchData.slice(2);
+  }
+
+  downloadTemplate() {
+    fs.open('../statics/RMDE2019.xlsm', 'r', (err, fd) => {
+      if (err) throw err;
+      const blob = fd as Blob;
+      exportFile('RMDE2019.xlsm', blob);
+
+      fs.close(fd, (err) => {
+        if (err) throw err;
+      });
+    });
   }
 
   addRow() {
-    let newRow = {species: null,
-      grouping: null,
-      totalCatch: null,
-      depthCapture: null,
-      released: null,
-      notes: null};
+    let newRow = {
+      grouping: undefined,
+      species: undefined,
+      totalCatch: undefined,
+      depthCapture: undefined,
+      released: undefined,
+      notes: ''
+    };
     this.data.push(newRow);
   }
 
+  submitCatch() {
+    if (this.data.length > 0){
+      console.log('at least I got here');
+      let axiosData = {'research_project_id': this.permit['research_project_id'],
+        'year': this.permit['permit_year'],
+        'catch_data': this.data
+      }
+
+      axios
+        .put('http://localhost:8080/api/catch', axiosData)
+        .then(res => {
+          console.log(res);
+          this.saveSuccesfulBlock = true;
+          this.saveFailedBlock = false;
+        })
+        // TODO: How do I catch a 401 response here?
+        .catch(error => {
+          console.log(error);
+          this.saveFailedBlock = true;
+          this.saveSuccesfulBlock = false;
+        });
+    }
+    else {
+      // Add message that data table is empty
+      this.saveFailedBlock = true;
+    }
+  }
+    
   get startDate() {
     return date.formatDate(this.permit['start_date'], 'YYYY-MM-DD');
   }
@@ -401,11 +494,34 @@ export default class Permits extends Vue {
   mounted() {
     axios
       .get('http://localhost:8080/api/grouping')
-      .then(response => (this.groupingList = response.data.map(a => a.grouping_name)));
+      .then(
+        response =>
+          (this.groupingList = response.data.map(a => a.grouping_name))
+      );
     axios
       .get('http://localhost:8080/api/species')
-      .then(response => (this.speciesList = response.data.map(a => a.common_name)));
+      .then(
+        response => (this.speciesList = response.data.map(a => a.common_name))
+      );
+    axios
+      .get('/api/speciesgrouping')
+      .then(
+        response =>
+          (this.groupingSpeciesList = response.data.map(a =>
+            a.grouping_name.concat(a.common_name)
+          ))
+      );
   }
-
 }
 </script>
+
+<style>
+.my-table-details {
+  font-size: 0.85em;
+  font-style: italic;
+  max-width: 200px;
+  white-space: normal;
+  color: #555;
+  margin-top: 4px;
+}
+</style>

@@ -237,7 +237,7 @@
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat label="Yes" color="primary" v-close-popup @click="scrollUp" />
+            <q-btn flat label="Yes" color="primary" v-close-popup/>
             <q-btn flat label="No" color="primary" to="/permits" v-close-popup />
           </q-card-actions>
         </q-card>
@@ -268,10 +268,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { date } from 'quasar';
-import { scroll } from 'quasar';
 import axios from 'axios';
-
-const { getScrollTarget, setScrollPosition } = scroll;
 
 @Component
 export default class Permits extends Vue {
@@ -280,7 +277,7 @@ export default class Permits extends Vue {
     email: 'trogdor@noaa.gov',
     newOrganization: null
   };
-  temp = [];
+  temp = [{name: ''}];
   originalPermitNum: string = '';
   tab: string = 'permitDetails';
   otherChosen: boolean = false;
@@ -316,15 +313,6 @@ export default class Permits extends Vue {
   $refs!: {
     section: HTMLFormElement;
   };
-
-  scrollUp() {
-    this.$refs.section.scrollTo(0, 0);
-  }
-
-  // scrollUp() {
-  //   //this.$refs.scrollArea.setScrollPosition(0);
-  //   setScrollPosition(getScrollTarget(this.$refs.list), 0, 250)
-  // }
 
   saveNewPermit() {
     let uploadObject = Object.assign(this.$store.state.sPermit.permit);

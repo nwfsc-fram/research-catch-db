@@ -60,6 +60,21 @@ const getSpeciesList = async (request, response) => {
   })
 }
 
+// Need to fetch grouping species combos
+const getSpeciesGrouping = async (request, response) => {
+  pool.query('SELECT grouping_name, common_name FROM "GROUPING_SPECIES_VIEW";', (error, results) => {
+    if (error) {
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: error.message
+      });
+    } else {
+      response.status(200).json(results.rows)
+    }
+  })
+}
+
 // Get the list of org names in the ORGANIZATION_LU table
 const getOrgNames = async (request, response) => {
   pool.query('SELECT name FROM "ORGANIZATION_LU"', (error, results) => {
@@ -95,6 +110,31 @@ async function getMaxResearchId() {
   let output = null;
   try{
     output = await pool.query('SELECT max(research_project_id) FROM "RESEARCH_PROJECT"');
+  } catch (err) {
+    console.log(err.stack);
+  }
+
+  return output.rows[0];
+}
+
+// Get the maximum used catch id
+async function getMaxCatchId() {
+  let output = null;
+  try {
+    output = await pool.query('SELECT max(catch_id) FROM "CATCH"')
+  } catch (err) {
+    console.log(err.stack);
+  }
+
+  return output.rows[0];
+}
+
+// Get a grouping_species ID value for a given grouping/species/year combo
+async function getGroupSpecID(grouping, species, year) {
+  let output = null;
+  try {
+    output = await pool.query('SELECT grouping_species_id FROM "GROUPING_SPECIES_VIEW" WHERE  grouping_name=$1 AND common_name=$2 AND year=$3', 
+      [grouping, species, year]);
   } catch (err) {
     console.log(err.stack);
   }
@@ -247,6 +287,79 @@ const updatePermit = async (request, response) => {
 This function can be used to add a new permit entry to
 the RESEARCH_PROJECT table. Does not require all fields
 to have values in the API call, it will automatically
+asign nulls to missing fields.
+*/
+const addCatchData = async (request, response) => {
+  const result = {
+    researchProjectId: request.body.research_project_id,
+    catchData: request.body.catch_data,
+    year: request.body.year
+  }
+
+  let sqlString = `INSERT INTO "CATCH" (catch_id, grouping_species_id, 
+    total_catch_mt, notes, research_project_id) VALUES `
+
+  // Get a new unused number for the catch_id value
+  let catchId = 9999;
+  try{
+    let maxReturn = await getMaxCatchId();
+    catchId = Number(maxReturn['max']) + 1;
+  } catch (err) {
+    console.log(err.stack);
+  }
+
+  for (let catchRow of result.catchData) {
+    let addString = '( ' + String(catchId) + ', ';
+    let groupSpecId = null;
+    try{
+      let groupSpecIdReturn = await getGroupSpecID(catchRow.grouping, catchRow.species, result.year);
+      groupSpecId = Number(groupSpecIdReturn['grouping_species_id']);
+    } catch (err) {
+      console.log(err.stack);
+    }
+
+    addString = addString.concat(groupSpecId, ', ');
+
+    if (catchRow.totalCatch) {
+      addString = addString.concat(catchRow.totalCatch, ', ');
+    } else {
+      addString = addString.concat('0, ');
+    }
+
+    if (catchId.notes) {
+      addString = addString.concat('\'', catchRow.notes, '\', ');
+    }
+    else {
+      addString = addString.concat('\'\', ');
+    }
+
+    addString = addString.concat(result.researchProjectId, '),');
+
+    sqlString = sqlString.concat(addString);
+    catchId += 1;
+  }
+
+  sqlString = sqlString.slice(0, -1);
+
+  pool.query(sqlString, (error, result) => {
+    if (error) {
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: error.message
+      });
+    }
+    // this isn't returning anything, not sure why since this example is in the docs...
+    else {
+      response.status(201).send(`Catch data added: ${result.rows[0]}`);
+    }
+  })
+}
+
+/*
+This function can be used to add a new permit entry to
+the RESEARCH_PROJECT table. Does not require all fields
+to have values in the API call, it will automatically
 asign nulls to missing fields. Translates regular 
 meaningful field values to their id values when appropriate
 */
@@ -358,9 +471,11 @@ module.exports.extendApp = function ({ app, ssr }) {
   app.get('/api/permitsview', getPermitsView)
   app.get('/api/grouping', getGroupingList)
   app.get('/api/species', getSpeciesList)
+  app.get('/api/speciesgrouping', getSpeciesGrouping)
   app.get('/api/orgNames', getOrgNames)
   app.post('/api/permitid', getPermitId)
   app.post('/api/permits', addPermit)
+  app.put('/api/catch', addCatchData)
   app.put('/api/permits', updatePermit)
   app.delete('/api/permits', deletePermit)
 }

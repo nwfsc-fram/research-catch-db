@@ -15,7 +15,7 @@ export default function (/* { ssrContext } */) {
 
     // enable strict mode (adds overhead!)
     // for dev mode only
-    strict: process.env.DEV
+    strict: process.env.DEV // eslint-disable-line
   })
 
   /*
@@ -25,8 +25,8 @@ export default function (/* { ssrContext } */) {
     get into our production build (and it shouldn't).
   */
 
-  if (process.env.DEV && module.hot) {
-    module.hot.accept(['./sPermit'], () => {
+  if (process.env.DEV && module.hot) { // eslint-disable-line
+    module.hot.accept(['./sPermit'], () => { // eslint-disable-line
       const newPermit = require('./sPermit').default
       Store.hotUpdate({ modules: { sPermit: newPermit } })
     })

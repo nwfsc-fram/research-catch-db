@@ -9,6 +9,7 @@
         :selected.sync="selected"
         :filter="filter"
         @selection="newSelection"
+        :pagination.sync="pagination"
       >
         <template v-slot:top>
           <q-btn
@@ -75,7 +76,9 @@ import axios from 'axios';
 @Component
 export default class Permits extends Vue {
   pagination = {
-    rowsPerPage: 0
+    rowsPerPage: 10,
+    sortBy: 'permitYear',
+    descending: true
   };
   filter = '';
   // TODO: import typing for this
@@ -142,7 +145,7 @@ export default class Permits extends Vue {
         sortable: true
       },
       { name: 'projectName', label: 'Project Name', field: 'project_name' },
-      { name: 'permitYear', label: 'Year', field: 'permit_year' },
+      { name: 'permitYear', label: 'Year', field: 'permit_year', sortable:true },
       {
         name: 'principleInvestigator',
         label: 'Principle Investigator',
