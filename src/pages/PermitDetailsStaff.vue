@@ -1,7 +1,7 @@
 <template>
   <div class="q-pa-md">
     <q-form @submit="saveNewPermit" autocomplete="off" id="disable-lastpass-search">
-      <div class="q-gutter-y-md" style="max-width: 600px">
+      <div class="q-gutter-y-md">
         <q-card>
           <q-tabs
             v-model="tab"
@@ -20,47 +20,44 @@
           <br />
 
           <q-tab-panels v-model="tab" animated>
-            <q-tab-panel v-if="saveModel" name="permitDetails" class="bg-indigo-4">
+            <q-tab-panel name="permitDetails" class="bg-indigo-4" style="max-width: 600px">
               <div ref="section">
-                <div>Login Account Information:</div>
-                <q-field
-                  square
-                  outlined
-                  label="Point of Contact"
-                  stack-label
-                  :dense="dense"
-                  readonly
-                  class="bg-indigo-1"
-                >
-                  <template v-slot:control>
-                    <div class="full-width no-outline">{{ permit_info.pointOfContact }}</div>
-                  </template>
-                </q-field>
-                <q-field
-                  square
-                  outlined
-                  label="Email Address"
-                  stack-label
-                  :dense="dense"
-                  readonly
-                  class="bg-indigo-1"
-                >
-                  <template v-slot:control>
-                    <div class="full-width no-outline">{{ permit_info.email }}</div>
-                  </template>
-                </q-field>
+                <div>Permit App point of contact</div>
+                <q-field outlined label="Point of Contact" stack-label square class="bg-indigo-1">
+                <template v-slot:control>
+                  <div class="self-center full-width no-outline" tabindex="0">{{ pointOfContact }}</div>
+                </template>
+              </q-field>
+              <q-field square outlined label="Email Address" stack-label class="bg-indigo-1">
+                <template v-slot:control>
+                  <div class="full-width no-outline">{{ email }}</div>
+                </template>
+              </q-field>
               </div>
             </q-tab-panel>
 
             <q-tab-panel name="catchData">
-              <div class="text-h6">Alarms</div>Lorem ipsum dolor sit amet consectetur adipisicing elit.
+              <q-table :data="data" :columns="columns" :loading="tableLoading">
+                <template v-slot:body="props">
+                  <q-tr :props="props">
+                    <q-td key="grouping" :props="props">{{ props.row.grouping }}</q-td>
+                    <q-td key="species" :props="props">{{ props.row.species }}</q-td>
+                    <q-td key="totalCatch" :props="props">{{ props.row.totalCatch }}</q-td>
+                    <q-td key="depthCaptured" :props="props">{{ props.row.depthCaptured }}</q-td>
+                    <q-td auto-width key="released" :props="props">{{ props.row.released }}</q-td>
+                    <q-td auto-width key="notes" :props="props">
+                      <div class="my-table-details">{{ props.row.notes }}</div>
+                    </q-td>
+                  </q-tr>
+                </template>
+              </q-table>
             </q-tab-panel>
           </q-tab-panels>
 
           <br />
 
           <q-tab-panels v-model="tab" animated>
-            <q-tab-panel name="permitDetails" class="bg-blue-4">
+            <q-tab-panel name="permitDetails" class="bg-blue-4" style="max-width: 600px">
               <q-input
                 outlined
                 v-model="permitNumber"
@@ -149,7 +146,7 @@
           <br />
 
           <q-tab-panels v-model="tab" animated>
-            <q-tab-panel name="permitDetails" class="bg-cyan-4">
+            <q-tab-panel name="permitDetails" class="bg-cyan-4" style="max-width: 600px">
               <q-input
                 outlined
                 v-model="startDate"
@@ -185,16 +182,12 @@
                 </q-menu>
               </q-input>
             </q-tab-panel>
-
-            <q-tab-panel name="catchData">
-              <div class="text-h6">Alarms</div>Lorem ipsum dolor sit amet consectetur adipisicing elit.
-            </q-tab-panel>
           </q-tab-panels>
 
           <br />
 
           <q-tab-panels v-model="tab" animated>
-            <q-tab-panel name="permitDetails" class="bg-teal-4">
+            <q-tab-panel name="permitDetails" class="bg-teal-4" style="max-width: 600px">
               <div>User Notes</div>
               <q-input v-model="permitNotes" filled type="textarea" class="bg-teal-1" />
               <br />
@@ -237,7 +230,7 @@
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat label="Yes" color="primary" v-close-popup/>
+            <q-btn flat label="Yes" color="primary" v-close-popup />
             <q-btn flat label="No" color="primary" to="/permits" v-close-popup />
           </q-card-actions>
         </q-card>
@@ -254,7 +247,7 @@
       </q-card>
       <q-card class="bg-red" v-if="saveFailedBlock">
         <q-card-section>
-          <div>Save unsucessful</div>
+          <div>Save unsuccessful: {{ errorMessage }}</div>
         </q-card-section>
       </q-card>
       <br />
@@ -270,22 +263,79 @@ import Component from 'vue-class-component';
 import { date } from 'quasar';
 import axios from 'axios';
 
+interface TableRow {
+  grouping: string | undefined;
+  species: string | undefined;
+  totalCatch: number | undefined;
+  depthCapture: number | undefined;
+  released: string | undefined;
+  notes: string;
+}
+
 @Component
 export default class Permits extends Vue {
+  pointOfContact = 'Seric Ogaz';
+  email = 'trogdor@noaa.gov';
   permit_info = {
-    pointOfContact: 'Seric Ogaz',
-    email: 'trogdor@noaa.gov',
     newOrganization: null
   };
-  temp = [{name: ''}];
+  temp = [{ name: '' }];
   originalPermitNum: string = '';
   tab: string = 'permitDetails';
   otherChosen: boolean = false;
   saveSuccesfulBlock = false;
   saveFailedBlock = false;
+  errorMessage = '';
   saveModel = false;
   errorText = '';
   dense = false;
+
+  data: TableRow[] = [
+    {
+      grouping: '',
+      species: '',
+      totalCatch: undefined,
+      depthCapture: undefined,
+      released: undefined,
+      notes: ''
+    }
+  ];
+  columns = [
+    {
+      name: 'grouping',
+      label: 'Grouping',
+      field: 'grouping',
+      sortable: true
+    },
+    {
+      name: 'species',
+      align: 'center',
+      label: 'Species',
+      field: 'species',
+      sortable: true
+    },
+    {
+      name: 'totalCatch',
+      label: 'Total Catch (mt)',
+      field: 'totalCatch',
+      sortable: true
+    },
+    {
+      name: 'depthCaptured',
+      label: 'Depth Captured Bin',
+      field: 'depthCaptured'
+    },
+    {
+      name: 'released',
+      label: '% Released at Depth',
+      field: 'released'
+    },
+    {
+      name: 'notes',
+      label: 'Notes',
+      field: 'notes'
+    }
+  ];
 
   // Make the organization name field indented or something to indicate
   // it's a temp field?
@@ -335,9 +385,9 @@ export default class Permits extends Vue {
         this.$store.commit('sPermit/clearSPermit');
         this.saveModel = true;
       })
-      // TODO: How do I catch a 401 response here?
       .catch(error => {
-        console.log(error);
+        console.log(error.response);
+        this.errorMessage = 'could not save new permit to database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
       });
@@ -364,7 +414,8 @@ export default class Permits extends Vue {
       })
       // TODO: How do I catch a 401 response here?
       .catch(error => {
-        console.log(error);
+        console.log(error.response);
+        this.errorMessage = 'could not update permit informartion in database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
       });
@@ -486,7 +537,10 @@ export default class Permits extends Vue {
     // TODO: error handeling
     axios
       .get('http://localhost:8080/api/orgNames')
-      .then(response => (this.temp = response.data));
+      .then(response => (this.temp = response.data))
+      .catch(error => {
+        console.log(error.response);
+      });
     this.originalPermitNum = this.$store.state.sPermit.permit.permit_number;
   }
 }
