@@ -36,14 +36,11 @@
           </q-tab-panel>
 
           <q-tab-panel name="catchData">
-            <div class="row no-wrap justify-between">
-              <div class="text-h6 col-2">Catch Data</div>
-              <div class="col-10">
-                You only need to complete one of these three options.
-                Once you've retrieved data from a URL or uploaded a spreadsheet, your data will be populated in
-                the table below. You can also enter data directly into the table. If the data has no errors you can submit your data using the button at the
-                bottom of the page.
-              </div>
+            <div>
+              You only need to complete one of the below options. Once you've uploaded a
+              spreadsheet, your data will be populated in the table below. You can also
+              enter data directly into the table. If the data has no errors you can submit
+              your data using the button at the bottom of the page.
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -84,7 +81,7 @@
           </q-tab-panel>
 
           <q-tab-panel name="catchData">
-            <div class="row justify-start q-gutter-sm">
+            <div class="row hidden justify-start q-gutter-sm">
               <div class="col-3">Data URL</div>
               <q-input class="col-6" outlined v-model="dataURL" />
               <q-btn class="col-2" color="primary" label="Retrieve Data" />
@@ -93,16 +90,20 @@
             <div class="row justify-start q-gutter-sm">
               <div class="col-3">Microsoft Excel File Upload</div>
               <q-file @input="startIngest($event)" class="col-6" outlined v-model="excelFile" />
-              <q-btn class="col-2" color="primary" label="Download Template" @click="downloadTemplate"/>
+              <q-btn
+                class="col-2"
+                color="primary"
+                label="Download Template"
+                @click="downloadTemplate"
+              />
             </div>
             <br />
             <q-separator color="primary" />
           </q-tab-panel>
         </q-tab-panels>
 
-        <br />
-
         <q-tab-panels v-model="tab" animated>
+          <br />
           <q-tab-panel name="permitDetails" class="bg-cyan-4" style="max-width: 600px">
             <q-field outlined label="Permit Start" stack-label class="bg-cyan-1">
               <template v-slot:control>
@@ -118,27 +119,29 @@
           </q-tab-panel>
 
           <q-tab-panel name="catchData">
+            <br />
+
             <div class="row q-gutter-sm no-wrap">
-              <div>Table Entry</div>
-              <div class="offset-5">
-                Mode:
-                <q-btn-toggle
-                  v-model="weights"
-                  push
-                  glossy
-                  toggle-color="primary"
-                  :options="[
-                            {label: 'Weights', value: true},
-                            {label: 'Counts + Avg Weight', value: false}
-                          ]"
-                />
-              </div>
+              <b>Table Entry</b>
+              <br />
             </div>
+
+            <q-banner class="bg-green-11 text-body1 justify-around">
+              For small unmeasured amounts of catch, please use 0.001mt for Total Catch.
+              <br />
+              <br />If a species caught under your permit is missing from the species list,
+              please contact Kate Richerson (kate.e.richerson@noaa.gov) or
+              Kayleigh Somers (kayleigh.somers@noaa.gov)
+            </q-banner>
+
+            <br />
+
             <q-table
               :data="data"
               :columns="columns"
               :loading="tableLoading"
               :row-key="row => row.grouping.concat(':', row.species)"
+              no-data-label="Spreadsheet Import Failed"
             >
               <template v-slot:body="props">
                 <q-tr :props="props">
@@ -147,9 +150,12 @@
                     :props="props"
                     :style="groupingSpeciesList.includes(props.row.grouping.concat(props.row.species)) ? '' : `color:red;`"
                   >
-                    <div class="text-pre-wrap">{{ props.row.grouping }}</div>
-                    <q-popup-edit v-model="props.row.grouping">
-                      <q-select v-model="props.row.grouping" :options="groupingList" />
+                    {{ props.row.grouping }}
+                    <q-popup-edit v-model="props.row.grouping" buttons>
+                      <q-select
+                        v-model="props.row.grouping"
+                        :options="groupingSelect(props.row.species)"
+                      />
                     </q-popup-edit>
                   </q-td>
                   <q-td
@@ -158,30 +164,19 @@
                     :style="groupingSpeciesList.includes(props.row.grouping.concat(props.row.species)) ? '' : `color:red;`"
                   >
                     {{ props.row.species }}
-                    <q-popup-edit v-model="props.row.species" title="Update Species" buttons>
+                    <q-popup-edit v-model="props.row.species" buttons>
                       <q-select v-model="props.row.species" dense autofocus :options="speciesList" />
                     </q-popup-edit>
                   </q-td>
                   <q-td key="totalCatch" :props="props">
                     {{ props.row.totalCatch }}
-                    <q-popup-edit
-                      v-model="props.row.totalCatch"
-                      title="Update TotalCatch"
-                      buttons
-                      persistent
-                    >
-                      <q-input
-                        type="text"
-                        v-model="props.row.totalCatch"
-                        dense
-                        autofocus
-                        hint="Use buttons to close"
-                      />
+                    <q-popup-edit v-model="props.row.totalCatch" buttons>
+                      <q-input type="number" v-model="props.row.totalCatch" dense autofocus />
                     </q-popup-edit>
                   </q-td>
                   <q-td key="depthCaptured" :props="props">
-                    <div class="text-pre-wrap">{{ props.row.depthCaptured }}</div>
-                    <q-popup-edit v-model="props.row.depthCaptured">
+                    {{ props.row.depthCaptured }}
+                    <q-popup-edit v-model="props.row.depthCaptured" buttons>
                       <q-select
                         v-model="props.row.depthCaptured"
                         dense
@@ -191,14 +186,14 @@
                     </q-popup-edit>
                   </q-td>
                   <q-td auto-width key="released" :props="props">
-                    <div class="text-pre-wrap">{{ props.row.released }}</div>
-                    <q-popup-edit v-model="props.row.released">
-                      <q-input type="text" v-model="props.row.released" dense autofocus />
+                    {{ props.row.released }}
+                    <q-popup-edit v-model="props.row.released" buttons>
+                      <q-input type="number" v-model="props.row.released" dense autofocus />
                     </q-popup-edit>
                   </q-td>
                   <q-td auto-width key="notes" :props="props">
                     <div class="my-table-details">{{ props.row.notes }}</div>
-                    <q-popup-edit v-model="props.row.notes">
+                    <q-popup-edit v-model="props.row.notes" buttons>
                       <q-input type="textarea" v-model="props.row.notes" />
                     </q-popup-edit>
                   </q-td>
@@ -207,8 +202,13 @@
             </q-table>
             <br />
             <div class="row">
-            <q-btn color="primary" label="Add Row" @click="addRow" />
-            <q-btn color="positive" label="Submit Catch Data" @click="submitCatch" :disable="data.length < 1"/>
+              <q-btn color="primary" v-if="addRowButton" label="Add Row" @click="addRow" />
+              <q-btn
+                color="positive"
+                label="Submit Catch Data"
+                @click="submitCatch"
+                :disable="data.length < 1"
+              />
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -262,11 +262,13 @@
     </q-card>
     <q-card class="bg-red" v-if="saveFailedBlock">
       <q-card-section>
-        <div>Save unsucessful</div>
+        <div>Save unsuccessful: {{ errorMessage }}</div>
       </q-card-section>
     </q-card>
-    <div>{{ tempInsert }}</div>
-    <br />
+
+  <div>{{ catchData }}</div>
+
+    <br>
   </div>
 </template>
 
@@ -282,7 +284,7 @@ interface TableRow {
   grouping: string | undefined;
   species: string | undefined;
   totalCatch: number | undefined;
-  depthCapture: number | undefined;
+  depthCaptured: number | undefined;
   released: string | undefined;
   notes: string;
 }
@@ -296,28 +298,30 @@ export default class Permits extends Vue {
   dataURL = null;
   excelFile = null;
   tableLoading = false;
-  weights = true;
   dense = false;
+  addRowButton = true;
   catchData = [];
   tab = 'permitDetails';
   saveSuccesfulBlock = false;
   saveFailedBlock = false;
+  errorMessage = '';
   groupingList = null;
   speciesList = null;
   groupingSpeciesList = [];
+  groupingBySpecies = {};
   tempInsert = null;
-  depthBinList = [
-    'NA',
-    '0-10',
-    '10-20',
-    '20-30',
-    '30-50',
-    '30-50',
-    '50-100',
-    '>100'
-  ];
+  depthBinList = ['NA', '0-10', '10-20', '20-30', '30-50', '50-100', '>100'];
 
-  data: TableRow[] = [];
+  data: TableRow[] = [
+    {
+      grouping: '',
+      species: '',
+      totalCatch: undefined,
+      depthCaptured: undefined,
+      released: undefined,
+      notes: ''
+    }
+  ];
   columns = [
     {
       name: 'grouping',
@@ -369,13 +373,14 @@ export default class Permits extends Vue {
         this.saveFailedBlock = false;
       })
       .catch(error => {
-        console.log(error);
+        console.log(error.response);
+        this.errorMessage = 'could not update permit informartion in database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
       });
   }
 
-  ingestExcel(event, callback) {
+  async ingestExcel(event, callback) {
     if (this.excelFile) {
       let f = this.excelFile;
       let reader = new FileReader();
@@ -384,9 +389,10 @@ export default class Permits extends Vue {
     }
   }
 
-  startIngest(e) {
+  async startIngest(e) {
     this.tableLoading = true;
-    this.ingestExcel(e, this.handleLoading);
+    this.data = [];
+    await this.ingestExcel(e, this.handleLoading);
     this.tableLoading = false;
   }
 
@@ -396,10 +402,11 @@ export default class Permits extends Vue {
     let worksheet = workbook.Sheets[workbook.SheetNames[1]];
     this.catchData = XLSX.utils.sheet_to_json(worksheet, {
       header: [
+        'trash',
         'grouping',
         'species',
         'totalCatch',
-        'depthCapture',
+        'depthCaptured',
         'released',
         'notes'
       ]
@@ -413,18 +420,30 @@ export default class Permits extends Vue {
       const blob = fd as Blob;
       exportFile('RMDE2019.xlsm', blob);
 
-      fs.close(fd, (err) => {
+      fs.close(fd, err => {
         if (err) throw err;
       });
     });
   }
 
   addRow() {
-    let newRow = {
-      grouping: undefined,
-      species: undefined,
+    let check = false;
+    for (let row of this.data) {
+      if (row.hasOwnProperty('grouping') && row.hasOwnProperty('species')) {
+        check = true;
+        break;
+      }
+    }
+    if (!check) {
+      console.log('no good data, so cleaning up');
+      this.data = [];
+    }
+
+    let newRow: TableRow = {
+      grouping: '',
+      species: '',
       totalCatch: undefined,
-      depthCapture: undefined,
+      depthCaptured: undefined,
       released: undefined,
       notes: ''
     };
@@ -432,12 +451,12 @@ export default class Permits extends Vue {
   }
 
   submitCatch() {
-    if (this.data.length > 0){
-      console.log('at least I got here');
-      let axiosData = {'research_project_id': this.permit['research_project_id'],
-        'year': this.permit['permit_year'],
-        'catch_data': this.data
-      }
+    if (this.data.length > 0) {
+      let axiosData = {
+        research_project_id: this.permit['research_project_id'], // eslint-disable-line
+        year: this.permit['permit_year'],
+        catch_data: this.data // eslint-disable-line
+      };
 
       axios
         .put('http://localhost:8080/api/catch', axiosData)
@@ -448,17 +467,25 @@ export default class Permits extends Vue {
         })
         // TODO: How do I catch a 401 response here?
         .catch(error => {
-          console.log(error);
+          console.log(error.response);
+          this.errorMessage = 'could not save catch data to database';
           this.saveFailedBlock = true;
           this.saveSuccesfulBlock = false;
         });
-    }
-    else {
+    } else {
       // Add message that data table is empty
       this.saveFailedBlock = true;
     }
   }
-    
+
+  groupingSelect(species) {
+    if (species.length > 0) {
+      return this.groupingBySpecies[species];
+    } else {
+      return this.groupingList;
+    }
+  }
+
   get startDate() {
     return date.formatDate(this.permit['start_date'], 'YYYY-MM-DD');
   }
@@ -497,20 +524,34 @@ export default class Permits extends Vue {
       .then(
         response =>
           (this.groupingList = response.data.map(a => a.grouping_name))
-      );
+      )
+      .catch(error => {
+        console.log(error.response);
+      });
     axios
       .get('http://localhost:8080/api/species')
       .then(
         response => (this.speciesList = response.data.map(a => a.common_name))
-      );
+      )
+      .catch(error => {
+        console.log(error.response);
+      });
     axios
       .get('/api/speciesgrouping')
-      .then(
-        response =>
-          (this.groupingSpeciesList = response.data.map(a =>
-            a.grouping_name.concat(a.common_name)
-          ))
-      );
+      .then(response => {
+        this.groupingSpeciesList = response.data.map(a =>
+          a.grouping_name.concat(a.common_name)
+        );
+        for (let row of response.data)
+          if (row.common_name in this.groupingBySpecies) {
+            this.groupingBySpecies[row.common_name].push(row.grouping_name);
+          } else {
+            this.groupingBySpecies[row.common_name] = [row.grouping_name];
+          }
+      })
+      .catch(error => {
+        console.log(error.response);
+      });
   }
 }
 </script>

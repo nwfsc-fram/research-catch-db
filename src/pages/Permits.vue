@@ -27,7 +27,7 @@
             dense
             color="primary"
             v-if="selected.length !== 0"
-            label="Submit Catch Data"
+            label="Submit Catch Data / Edit Permit"
             @click="editRow"
           />
           <q-btn
