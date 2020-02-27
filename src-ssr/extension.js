@@ -122,7 +122,7 @@ async function getDepthBinId(depth, groupingSpeciesId) {
   let output = null;
   let minDepth;
   let maxDepth;
-  if (depth === '>100') {
+  if (depth.includes('>100')) {
     minDepth = 100;
     maxDepth = 999999;
   } else {
@@ -198,6 +198,22 @@ const getSpeciesGrouping = async (request, response) => {
   })
 }
 
+// Get the list of groupings and species that have depth bins
+const getDepthGroupings = async (request, response) => {
+  pool.query('SELECT grouping_name, common_name FROM "DEPTH_BIN_GROUPINGS_VIEW";', (error, results) => {
+    if (error) {
+      console.error(error.stack);
+      response.status(401).json({
+        status: 401,
+        message: 'Could not retrieve grouping species with depth bins from database: ' + error.stack
+      });
+    } else {
+      response.status(200).json(results.rows)
+    }
+  })
+}
+
+
 // Get the list of org names in the ORGANIZATION_LU table
 const getOrgNames = async (request, response) => {
   pool.query('SELECT name FROM "ORGANIZATION_LU"', (error, results) => {
@@ -215,7 +231,7 @@ const getOrgNames = async (request, response) => {
 // Get permit id value for a given permit name
 const getPermitId = async (request, response) => {
   pool.query('SELECT research_project_id FROM "RESEARCH_PROJECT" WHERE permit_number = $1',
-    [request.body.permit_number], (error, results) => {
+    [request.params.pnum], (error, results) => {
       if (error) {
         console.error(error.stack);
         response.status(401).json({
@@ -231,7 +247,7 @@ const getPermitId = async (request, response) => {
 // Get catch data for a given permit
 const getCatchData = async (request, response) => {
   pool.query('SELECT * FROM "CATCH_VIEW" WHERE research_project_id = $1',
-    [request.body.research_project_id], (error, results) => {
+    [request.params.pid], (error, results) => {
       if (error) {
         console.error(error.stack);
         response.status(401).json({
@@ -389,10 +405,10 @@ const addCatchData = async (request, response) => {
     }
 
     // Depth Captured
-    if (catchRow.depthCaptured) {
+    if (catchRow.depthCaptured && !catchRow.depthCaptured.includes('NA')) {
       let depthBinId = null;
       try {
-        let depthBinReturn = await getDepthBinId(catchRow.depthCaptured, groupSpecId);
+        let depthBinReturn = await getDepthBinId(String(catchRow.depthCaptured), groupSpecId);
         depthBinId = Number(depthBinReturn['depth_bin_id']);
       } catch (err) {
         response.status(401).json({
@@ -444,6 +460,25 @@ const addCatchData = async (request, response) => {
       response.status(201).send(`Catch data added: ${result.rows[0]}`);
     }
   })
+}
+
+// If catch data is resubmitted, old catch data for that permit
+// will be deleted
+const deleteCatchData = (request, response) => {
+
+  pool.query('DELETE FROM "CATCH" WHERE research_project_id = $1',
+    [request.params.id], (error, result) => {
+      if (error) {
+        // this doesn't really get used as postgres doesn't return an error when
+        // there's no matching row, it just just doesn't do anything.
+        console.error(error.stack);
+        response.status(404).json({
+          status: 404,
+          message: error.message
+        });
+      }
+      response.status(200).send(`Catch data deleted with ID: ${result.insertId}`)
+    })
 }
 
 /*
@@ -558,12 +593,9 @@ const addPermit = async (request, response) => {
 }
 
 const deletePermit = (request, response) => {
-  const result = {
-    permitNum: request.body.permitNum
-  };
 
   pool.query('DELETE FROM "RESEARCH_PROJECT" WHERE permit_number = $1',
-    [result.permitNum], (error, result) => {
+    [request.params.permitnum], (error, result) => {
       if (error) {
         // this doesn't really get used as postgres doesn't return an error when
         // there's no matching row, it just just doesn't do anything.
@@ -590,11 +622,13 @@ module.exports.extendApp = function ({ app, ssr }) {
   app.get('/api/grouping', getGroupingList)
   app.get('/api/species', getSpeciesList)
   app.get('/api/speciesgrouping', getSpeciesGrouping)
+  app.get('/api/depthgroupings', getDepthGroupings)
   app.get('/api/orgNames', getOrgNames)
-  app.post('/api/permitid', getPermitId)
+  app.get('/api/permitid/:pnum', getPermitId)
   app.post('/api/permits', addPermit)
-  app.put('/api/catch', addCatchData)
-  app.post('/api/catch', getCatchData)
+  app.post('/api/catch', addCatchData)
+  app.get('/api/catch/:pid', getCatchData)
+  app.delete('/api/catch/:id', deleteCatchData)
   app.put('/api/permits', updatePermit)
-  app.delete('/api/permits', deletePermit)
+  app.delete('/api/permits/:permitnum', deletePermit)
 }

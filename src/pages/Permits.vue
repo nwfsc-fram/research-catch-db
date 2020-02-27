@@ -1,5 +1,8 @@
 <template>
   <div class="text-center">
+    <br>
+    <div>Check a box on the left hand side of the table below to view/edit a permit.</div>
+
     <div class="q-pa-md">
       <q-table
         :data="data"
@@ -27,7 +30,7 @@
             dense
             color="primary"
             v-if="selected.length !== 0"
-            label="Submit Catch Data / Edit Permit"
+            :label="editButtonText"
             @click="editRow"
           />
           <q-btn
@@ -96,7 +99,7 @@ export default class Permits extends Vue {
 
   async editRow() {
     try {
-      let output = await axios.post('http://localhost:8080/api/permitid', {'permit_number': this.permit.permit_number})
+      let output = await axios.get('http://localhost:8080/api/permitid/' + this.permit.permit_number)
       this.projectId = output.data[0]['research_project_id']
 
       if (this.poweruser) {
@@ -112,8 +115,7 @@ export default class Permits extends Vue {
 
   async deleteRow() {
     // Delete the row with the specified permit value
-    let jsondata = { permitNum: this.selected[0].permit_number };
-    await axios.delete('http://localhost:8080/api/permits/', { data: jsondata });
+    await axios.delete('http://localhost:8080/api/permits/' + this.selected[0].permit_number);
 
     // Now that the value is deleted from the DB reload the table
     this.selected = [];
@@ -207,6 +209,14 @@ export default class Permits extends Vue {
           sortable: true
         }
       );
+    }
+  }
+
+  get editButtonText() {
+    if (this.poweruser) {
+      return 'Edit Permit / View Catch Data'
+    } else {
+      return 'Submit Catch Data'
     }
   }
 
