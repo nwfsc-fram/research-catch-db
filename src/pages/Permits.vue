@@ -1,5 +1,8 @@
 <template>
   <div class="text-center">
+    <br />
+    <div>Check a box on the left hand side of the table below to view/edit a permit.</div>
+
     <div class="q-pa-md">
       <q-table
         :data="data"
@@ -27,7 +30,7 @@
             dense
             color="primary"
             v-if="selected.length !== 0"
-            label="Submit Catch Data / Edit Permit"
+            :label="editButtonText"
             @click="editRow"
           />
           <q-btn
@@ -43,7 +46,9 @@
             <q-card>
               <q-card-section class="row items-center">
                 <q-avatar color="primary" text-color="white" />
-                <span class="q-ml-sm">Do you really want to remove the permit entry for {{ permit['permit_number'] }}</span>
+                <span
+                  class="q-ml-sm"
+                >Do you really want to remove the permit entry for {{ permit['permit_number'] }}</span>
               </q-card-section>
 
               <q-card-actions align="center">
@@ -72,6 +77,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { date } from 'quasar';
 import axios from 'axios';
+import { authService } from '@boatnet/bn-auth/lib';
 
 @Component
 export default class Permits extends Vue {
@@ -82,11 +88,12 @@ export default class Permits extends Vue {
   };
   filter = '';
   // TODO: import typing for this
-  selected = [];
+  selected: object[] = [];
   data = [];
-  columns : object[] = [];
+  columns: object[] = [];
   confirm = false;
-  poweruser = false;
+  authConfig: object = {};
+  poweruser = true;
 
   addRow() {
     // clear vuex store
@@ -96,8 +103,10 @@ export default class Permits extends Vue {
 
   async editRow() {
     try {
-      let output = await axios.post('http://localhost:8080/api/permitid', {'permit_number': this.permit.permit_number})
-      this.projectId = output.data[0]['research_project_id']
+      let output = await axios.get(
+        'rcat/api/v1/permitid/' + this.permit.permit_number, this.authConfig
+      );
+      this.projectId = output.data[0]['research_project_id'];
 
       if (this.poweruser) {
         this.$router.push('/permitdetails-staff');
@@ -107,25 +116,26 @@ export default class Permits extends Vue {
     } catch (error) {
       console.log('error', error);
       //display some error
-    } 
+    }
   }
 
   async deleteRow() {
     // Delete the row with the specified permit value
-    let jsondata = { permitNum: this.selected[0].permit_number };
-    await axios.delete('http://localhost:8080/api/permits/', { data: jsondata });
+    await axios.delete(
+      'rcat/api/v1/permits/' + this.selected[0].permit_number,
+      this.authConfig
+    );
 
     // Now that the value is deleted from the DB reload the table
     this.selected = [];
     axios
-      .get('http://localhost:8080/api/permitsview')
+      .get('rcat/api/v1/permitsview', this.authConfig)
       .then(response => (this.data = response.data));
   }
 
   newSelection(details) {
     if (details.added) {
       this.$store.commit('sPermit/updateSPermit', details.rows[0]);
-      
     }
   }
 
@@ -145,7 +155,12 @@ export default class Permits extends Vue {
         sortable: true
       },
       { name: 'projectName', label: 'Project Name', field: 'project_name' },
-      { name: 'permitYear', label: 'Year', field: 'permit_year', sortable:true },
+      {
+        name: 'permitYear',
+        label: 'Year',
+        field: 'permit_year',
+        sortable: true
+      },
       {
         name: 'principleInvestigator',
         label: 'Principle Investigator',
@@ -210,6 +225,14 @@ export default class Permits extends Vue {
     }
   }
 
+  get editButtonText() {
+    if (this.poweruser) {
+      return 'Edit Permit / View Catch Data';
+    } else {
+      return 'Submit Catch Data';
+    }
+  }
+
   get permit() {
     return this.$store.state.sPermit.permit;
   }
@@ -232,8 +255,10 @@ export default class Permits extends Vue {
   }
 
   mounted() {
+    const token = authService.getCurrentUser()!.jwtToken!;
+    this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
     axios
-      .get('http://localhost:8080/api/permitsview')
+      .get('rcat/api/v1/permitsview', this.authConfig)
       .then(response => (this.data = response.data));
     this.assignColumns();
     this.isNew = false;

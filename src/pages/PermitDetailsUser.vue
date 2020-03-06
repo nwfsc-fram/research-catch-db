@@ -39,8 +39,8 @@
             <div>
               You only need to complete one of the below options. Once you've uploaded a
               spreadsheet, your data will be populated in the table below. You can also
-              enter data directly into the table. If the data has no errors you can submit
-              your data using the button at the bottom of the page.
+              enter data directly into the table. Once you've checked the data for errors
+              you can submit using the button at the bottom of the page.
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -86,10 +86,17 @@
               <q-input class="col-6" outlined v-model="dataURL" />
               <q-btn class="col-2" color="primary" label="Retrieve Data" />
             </div>
-            <br />
+
+            <p>To reupload a file, please clear and reselect the file name.</p>
             <div class="row justify-start q-gutter-sm">
               <div class="col-3">Microsoft Excel File Upload</div>
-              <q-file @input="startIngest($event)" class="col-6" outlined v-model="excelFile" />
+              <q-file
+                @input="startIngest($event)"
+                class="col-6"
+                clearable
+                outlined
+                v-model="excelFile"
+              />
               <q-btn
                 class="col-2"
                 color="primary"
@@ -174,7 +181,11 @@
                       <q-input type="number" v-model="props.row.totalCatch" dense autofocus />
                     </q-popup-edit>
                   </q-td>
-                  <q-td key="depthCaptured" :props="props">
+                  <q-td
+                    key="depthCaptured"
+                    :props="props"
+                    :style="depthBinList.includes(props.row.depthCaptured) ? '' : `color:red;`"
+                  >
                     {{ props.row.depthCaptured }}
                     <q-popup-edit v-model="props.row.depthCaptured" buttons>
                       <q-select
@@ -266,26 +277,43 @@
       </q-card-section>
     </q-card>
 
-  <div>{{ catchData }}</div>
+    <div>{{ depthGroupings }}</div>
+    <div>{{ data }}</div>
 
-    <br>
+    <q-dialog v-model="submissionConfirmation">
+      <q-card>
+        <q-card-section>
+          <div class="text-h6">Catch Data Submitted!</div>
+        </q-card-section>
+
+        <q-card-section
+          class="q-pt-none"
+        >Catch data resubmitted for this permit will overwrite any existing data.</q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="OK" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <br />
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { date, exportFile } from 'quasar';
+import { date } from 'quasar';
 import axios from 'axios';
-import fs from 'fs';
 import XLSX from 'xlsx';
+import { authService } from '@boatnet/bn-auth/lib';
 
 interface TableRow {
   grouping: string | undefined;
   species: string | undefined;
   totalCatch: number | undefined;
-  depthCaptured: number | undefined;
-  released: string | undefined;
+  depthCaptured: string | undefined;
+  released: number | undefined;
   notes: string;
 }
 
@@ -305,12 +333,15 @@ export default class Permits extends Vue {
   saveSuccesfulBlock = false;
   saveFailedBlock = false;
   errorMessage = '';
+  submissionConfirmation = false;
   groupingList = null;
-  speciesList = null;
-  groupingSpeciesList = [];
+  speciesList = [];
+  depthGroupings:string[] = [];
+  groupingSpeciesList: string[] = [];
   groupingBySpecies = {};
   tempInsert = null;
   depthBinList = ['NA', '0-10', '10-20', '20-30', '30-50', '50-100', '>100'];
+  authConfig: object = {};
 
   data: TableRow[] = [
     {
@@ -366,7 +397,7 @@ export default class Permits extends Vue {
     delete uploadObject['delivery_date'];
 
     axios
-      .put('http://localhost:8080/api/permits', uploadObject)
+      .put('rcat/api/v1/permits', uploadObject, this.authConfig)
       .then(res => {
         console.log(res);
         this.saveSuccesfulBlock = true;
@@ -411,19 +442,12 @@ export default class Permits extends Vue {
         'notes'
       ]
     });
-    this.data = this.catchData.slice(2);
+    // temporarily changing this from 2 to 3, for 2019 catch data testing
+    this.data = this.catchData.slice(3);
   }
 
   downloadTemplate() {
-    fs.open('../statics/RMDE2019.xlsm', 'r', (err, fd) => {
-      if (err) throw err;
-      const blob = fd as Blob;
-      exportFile('RMDE2019.xlsm', blob);
-
-      fs.close(fd, err => {
-        if (err) throw err;
-      });
-    });
+    //do nothing
   }
 
   addRow() {
@@ -451,6 +475,28 @@ export default class Permits extends Vue {
   }
 
   submitCatch() {
+    // first delete any previously submitted data
+    // to-do, should be passing id as part of the url for a delete
+    axios
+      .delete(
+        'rcat/api/v1/catch/' + this.permit.research_project_id,
+        this.authConfig
+      )
+      .then(response => console.log(response))
+      .catch(error => {
+        console.log(error.response);
+      });
+
+    const checkResult = this.checkCatch();
+    console.log(checkResult);
+    if (checkResult !== 'passed') {
+      this.errorMessage =
+        'could not save catch data to database. ' + checkResult;
+      this.saveFailedBlock = true;
+      this.saveSuccesfulBlock = false;
+      return;
+    }
+
     if (this.data.length > 0) {
       let axiosData = {
         research_project_id: this.permit['research_project_id'], // eslint-disable-line
@@ -459,11 +505,12 @@ export default class Permits extends Vue {
       };
 
       axios
-        .put('http://localhost:8080/api/catch', axiosData)
+        .post('rcat/api/v1/catch', axiosData, this.authConfig)
         .then(res => {
           console.log(res);
           this.saveSuccesfulBlock = true;
           this.saveFailedBlock = false;
+          this.submissionConfirmation = true;
         })
         // TODO: How do I catch a 401 response here?
         .catch(error => {
@@ -476,6 +523,82 @@ export default class Permits extends Vue {
       // Add message that data table is empty
       this.saveFailedBlock = true;
     }
+  }
+
+  checkCatch() {
+    let checkSet = new Set();
+    let zeroStripped: TableRow[] = [];
+    for (const row of this.data!) {
+      // check for repeated groupings
+      if (
+        checkSet.has(row.grouping!.concat(row.species!, row.depthCaptured!))
+      ) {
+        return '\nRepeated grouping/species/depth bin: '.concat(
+          row.grouping!,
+          ', ',
+          row.species!,
+          ', ',
+          String(row.depthCaptured!)
+        );
+      } else {
+        checkSet.add(row.grouping!.concat(row.species!, row.depthCaptured!));
+      }
+
+      if (row.totalCatch && row.totalCatch > 0) {
+        zeroStripped.push(row);
+      }
+
+      // check for incorrect species grouping combination
+      if (
+        !this.groupingSpeciesList.includes(row.grouping!.concat(row.species!))
+      ) {
+        return 'Incorrect grouping and species combination found: '.concat(
+          row.grouping!,
+          ', ',
+          row.species!
+        );
+      }
+
+      // if depth captured present, make sure it's an applicable species grouping
+      if (
+        row.depthCaptured &&
+        row.depthCaptured !== 'NA' &&
+        !this.depthGroupings.includes(row.grouping!.concat(row.species!))
+      ) {
+        return 'Depth Bin defined for grouping and species that is not included in mortality credits: '.concat(
+          row.grouping!,
+          ', ',
+          row.species!
+        );
+      }
+
+      // if depth capture present, make sure it's an accepted value
+      if (row.depthCaptured && !this.depthBinList.includes(row.depthCaptured)) {
+        return 'Depth Bin for '.concat(
+          row.grouping!,
+          ', ',
+          row.species!,
+          ' is not an accepted value, please edit entry.'
+        );
+      }
+
+      // if depth bin or precent released defined, make sure the other exists
+      if (
+        (row.depthCaptured && row.depthCaptured !== 'NA' && !row.released) ||
+        (row.released &&
+          Number(row.released) !== 0 &&
+          (!row.depthCaptured || row.depthCaptured === 'NA'))
+      ) {
+        return 'Both depth captured and percent released at depth must be defined for '.concat(
+          row.grouping!,
+          ', ',
+          row.species!
+        );
+      }
+    }
+
+    this.data = zeroStripped;
+    return 'passed';
   }
 
   groupingSelect(species) {
@@ -519,8 +642,10 @@ export default class Permits extends Vue {
   }
 
   mounted() {
+    const token = authService.getCurrentUser()!.jwtToken!;
+    this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
     axios
-      .get('http://localhost:8080/api/grouping')
+      .get('rcat/api/v1/grouping', this.authConfig)
       .then(
         response =>
           (this.groupingList = response.data.map(a => a.grouping_name))
@@ -529,15 +654,27 @@ export default class Permits extends Vue {
         console.log(error.response);
       });
     axios
-      .get('http://localhost:8080/api/species')
+      .get('rcat/api/v1/species', this.authConfig)
       .then(
-        response => (this.speciesList = response.data.map(a => a.common_name))
+        response =>
+          (this.speciesList = response.data.map(a => a.common_name).sort())
       )
       .catch(error => {
         console.log(error.response);
       });
     axios
-      .get('/api/speciesgrouping')
+      .get('rcat/api/v1/depthgroupings', this.authConfig)
+      .then(
+        response =>
+          (this.depthGroupings = response.data.map(
+            a => a.grouping_name + a.common_name
+          ))
+      )
+      .catch(error => {
+        console.log(error.response);
+      });
+    axios
+      .get('rcat/api/v1/speciesgrouping', this.authConfig)
       .then(response => {
         this.groupingSpeciesList = response.data.map(a =>
           a.grouping_name.concat(a.common_name)

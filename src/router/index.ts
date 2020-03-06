@@ -7,8 +7,8 @@ import { LocalStorage } from 'quasar'
 import { authService } from '@boatnet/bn-auth';
 
 // Note: Jenkins build will update this dbConfig.ts file for Prod/ Stage/ Dev etc.
-// import dbConfig from '../config/dbConfig';
-// authService.setDBConfig(dbConfig);
+import dbConfig from '../config/dbConfig';
+authService.setDBConfig(dbConfig);
 
 Vue.use(VueRouter)
 

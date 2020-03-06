@@ -24,33 +24,20 @@
               <div ref="section">
                 <div>Permit App point of contact</div>
                 <q-field outlined label="Point of Contact" stack-label square class="bg-indigo-1">
-                <template v-slot:control>
-                  <div class="self-center full-width no-outline" tabindex="0">{{ pointOfContact }}</div>
-                </template>
-              </q-field>
-              <q-field square outlined label="Email Address" stack-label class="bg-indigo-1">
-                <template v-slot:control>
-                  <div class="full-width no-outline">{{ email }}</div>
-                </template>
-              </q-field>
+                  <template v-slot:control>
+                    <div class="self-center full-width no-outline" tabindex="0">{{ pointOfContact }}</div>
+                  </template>
+                </q-field>
+                <q-field square outlined label="Email Address" stack-label class="bg-indigo-1">
+                  <template v-slot:control>
+                    <div class="full-width no-outline">{{ email }}</div>
+                  </template>
+                </q-field>
               </div>
             </q-tab-panel>
 
             <q-tab-panel name="catchData">
-              <q-table :data="data" :columns="columns" :loading="tableLoading">
-                <template v-slot:body="props">
-                  <q-tr :props="props">
-                    <q-td key="grouping" :props="props">{{ props.row.grouping }}</q-td>
-                    <q-td key="species" :props="props">{{ props.row.species }}</q-td>
-                    <q-td key="totalCatch" :props="props">{{ props.row.totalCatch }}</q-td>
-                    <q-td key="depthCaptured" :props="props">{{ props.row.depthCaptured }}</q-td>
-                    <q-td auto-width key="released" :props="props">{{ props.row.released }}</q-td>
-                    <q-td auto-width key="notes" :props="props">
-                      <div class="my-table-details">{{ props.row.notes }}</div>
-                    </q-td>
-                  </q-tr>
-                </template>
-              </q-table>
+              <q-table :data="data" :columns="columns"></q-table>
             </q-tab-panel>
           </q-tab-panels>
 
@@ -67,7 +54,7 @@
                 class="bg-blue-1"
                 error-message="Permit number is an invalid format"
                 :error="!isPermitNumValid"
-                :rules="[val => !!val || 'Field is required']"
+                :rules="[val => (!!val && isPermitNumValid) || 'Field is required']"
                 lazy-rules
                 :autofocus="false"
               ></q-input>
@@ -158,7 +145,7 @@
               >
                 <q-menu>
                   <div class="row no-wrap q-pa-md">
-                    <q-date v-model="startDate" mask="YYYY-MM-DD" default-view="Years" />
+                    <q-date v-model="startDate" />
                   </div>
                 </q-menu>
               </q-input>
@@ -177,7 +164,7 @@
               >
                 <q-menu>
                   <div class="row no-wrap q-pa-md">
-                    <q-date v-model="endDate" mask="YYYY-MM-DD" default-view="Years" />
+                    <q-date v-model="endDate" />
                   </div>
                 </q-menu>
               </q-input>
@@ -253,6 +240,7 @@
       <br />
       <div class="q-mt-md">{{ permit }}</div>
       <div class="q-mt-md">Is New: {{ isNew.toString() }}</div>
+      <div class="q-mt-md">{{ data }}</div>
     </q-form>
   </div>
 </template>
@@ -260,8 +248,8 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { date } from 'quasar';
 import axios from 'axios';
+import { authService } from '@boatnet/bn-auth/lib';
 
 interface TableRow {
   grouping: string | undefined;
@@ -289,6 +277,7 @@ export default class Permits extends Vue {
   saveModel = false;
   errorText = '';
   dense = false;
+  authConfig: object = {};
 
   data: TableRow[] = [
     {
@@ -304,31 +293,31 @@ export default class Permits extends Vue {
     {
       name: 'grouping',
       label: 'Grouping',
-      field: 'grouping',
+      field: 'grouping_name',
       sortable: true
     },
     {
       name: 'species',
       align: 'center',
       label: 'Species',
-      field: 'species',
+      field: 'common_name',
       sortable: true
     },
     {
       name: 'totalCatch',
       label: 'Total Catch (mt)',
-      field: 'totalCatch',
+      field: 'total_catch_mt',
       sortable: true
     },
     {
       name: 'depthCaptured',
       label: 'Depth Captured Bin',
-      field: 'depthCaptured'
+      field: 'depth_bin'
     },
     {
       name: 'released',
       label: '% Released at Depth',
-      field: 'released'
+      field: 'percent_released_at_depth'
     },
     {
       name: 'notes',
@@ -345,18 +334,6 @@ export default class Permits extends Vue {
     } else {
       this.otherChosen = false;
       this.permit_info.newOrganization = null;
-    }
-  }
-
-  dateRules(endDate) {
-    if (endDate === '') {
-      return true;
-    } else {
-      if (endDate > this.startDate) {
-        return true;
-      } else {
-        return false;
-      }
     }
   }
 
@@ -378,7 +355,7 @@ export default class Permits extends Vue {
     uploadObject['data_status_id'] = 2;
 
     axios
-      .post('http://localhost:8080/api/permits', uploadObject)
+      .post('rcat/api/v1/permits', uploadObject, this.authConfig)
       .then(res => {
         console.log(res);
         this.saveFailedBlock = false;
@@ -406,7 +383,7 @@ export default class Permits extends Vue {
     }
 
     axios
-      .put('http://localhost:8080/api/permits', uploadObject)
+      .put('rcat/api/v1/permits', uploadObject, this.authConfig)
       .then(res => {
         console.log(res);
         this.saveSuccesfulBlock = true;
@@ -478,19 +455,13 @@ export default class Permits extends Vue {
     this.$store.commit('sPermit/updatePermitYear', value);
   }
   get startDate() {
-    return date.formatDate(
-      this.$store.state.sPermit.permit.start_date,
-      'YYYY-MM-DD'
-    );
+    return this.$store.state.sPermit.permit.start_date;
   }
   set startDate(value) {
     this.$store.commit('sPermit/updateStartDate', value);
   }
   get endDate() {
-    return date.formatDate(
-      this.$store.state.sPermit.permit.end_date,
-      'YYYY-MM-DD'
-    );
+    return this.$store.state.sPermit.permit.end_date;
   }
   set endDate(value) {
     this.$store.commit('sPermit/updateEndDate', value);
@@ -535,13 +506,26 @@ export default class Permits extends Vue {
 
   created() {
     // TODO: error handeling
+    const token = authService.getCurrentUser()!.jwtToken!;
+    this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
     axios
-      .get('http://localhost:8080/api/orgNames')
+      .get('rcat/api/v1/orgnames', this.authConfig)
       .then(response => (this.temp = response.data))
       .catch(error => {
         console.log(error.response);
       });
     this.originalPermitNum = this.$store.state.sPermit.permit.permit_number;
+    if (!this.isNew) {
+      axios
+        .get(
+          'rcat/api/v1/catch/' + parseInt(this.permit.research_project_id, 10),
+          this.authConfig
+        )
+        .then(response => (this.data = response.data))
+        .catch(error => {
+          console.log(error.response);
+      });
+    }
   }
 }
 </script>
