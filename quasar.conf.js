@@ -74,7 +74,7 @@ module.exports = function (ctx) {
           enforce: 'pre',
           test: /\.(js|vue)$/,
           loader: 'eslint-loader',
-          exclude: /node_modules/,
+          exclude: /(node_modules|research-catch-server)/,
           options: {
             formatter: require('eslint').CLIEngine.getFormatter('stylish')
           }
@@ -84,28 +84,29 @@ module.exports = function (ctx) {
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer
     devServer: {
-      // https: true,
-      // port: 8080,
+      //https: false,
+      //port: 8080,
       proxy: {
         // proxy all requests starting with /api to jsonplaceholder
+        '/rcat/api/v1/': {
+          target: 'https://localhost:9200',
+          changeOrigin: true,
+          secure: false
+        },
         '/api/v1': {
           target: 'https://localhost:9000',
           changeOrigin: true,
           pathRewrite: {
             '^/api/v1': ''
           }
-        }},
+        }
+      },
       open: true // opens browser window automatically
     },
 
     // animations: 'all', // --- includes all animations
     // https://quasar.dev/options/animations
     animations: [],
-
-    // https://quasar.dev/quasar-cli/developing-ssr/configuring-ssr
-    ssr: {
-      pwa: false
-    },
 
     // https://quasar.dev/quasar-cli/developing-pwa/configuring-pwa
     pwa: {

@@ -1,0 +1,666 @@
+openapi: 3.0.1
+info:
+  title: Research Catch API [DEV ONLY]
+  description: Server to provide REST API for postgres DB
+  version: 1.0.1
+servers:
+  - url: /rcat/api/v1
+tags:
+  - name: Permits
+    description: Permit Management
+  - name: Catch
+    description: Catch Data Management
+  - name: Info Pull
+    description: Various DB reads
+
+paths:
+  /permits:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Permits
+      summary: Insert new permit into permit table
+      operationId: postPermits
+      requestBody:
+        description: Need permit number, org name, either org id or new org, other fields are optional.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPermit'
+            example:
+                permit_number: 'SRP-01-2000'
+                organization_name: 'NWFSC'
+                project_name: 'Fishing for Science'
+                permit_year: 2000
+        required: true
+      responses:
+        '200':
+          description: 'Permit row added'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not add new permit to database'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not find user_id in database.'
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Permits
+      summary: Update permit in permit table
+      operationId: putPermits
+      requestBody:
+        description: Need research project (permit) id
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Permit'
+            example:
+                research_project_id: 123
+                email: "seagull@gmail.com"
+        required: true
+      responses:
+        '200':
+          description: 'Permit row updated'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not update permit entry'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not find status_id in database.'
+            
+  /permits/{permitnum}:
+    parameters:
+      - in: path
+        name: permitnum
+        description: number of permit to be Deleted
+        required: true
+        schema:
+          type: string
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Permits
+      summary: Delete permit in permit table
+      operationId: deletePermits
+      responses:
+        '200':
+          description: 'Permit succesfully deleted'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not delete permit'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not delete permit'
+
+  /catch:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Catch
+      summary: Add new catch data to a permit
+      operationId: postCatch
+      requestBody:
+        description: Need research project (permit) id
+        content:
+          application/json:
+            schema:
+              type: 'object'
+              properties:
+                research_project_id:
+                  type: integer
+                catch_data:
+                  type: array
+                year:
+                  type: integer
+            example:
+                research_project_id: 123
+                catch_data: {}
+                year: 2020
+        required: true
+      responses:
+        '200':
+          description: 'Catch data was succesfully added'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not add catch data to database'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not find matching grouping_species_id in database'
+    
+  /catch/{pid}:
+    parameters:
+      - name: pid
+        in: path
+        description: research project id to retrieve catch data for.
+        required: true
+        schema:
+          type: integer
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Catch
+      summary: retrieve catch data for particular permit
+      operationId: getCatch
+      responses:
+        '200':
+          description: 'Retrieved catch data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatchData'
+        '400':
+          description: 'Could not add catch data to database'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not find matching grouping_species_id in database'
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Catch
+      summary: delete catch data for particular permit
+      operationId: deleteCatch
+      responses:
+        '200':
+          description: 'Deleted catch data'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not delete catch data'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not delete catch data'
+
+  /permitid/{pnum}:
+    parameters:
+      - in: path
+        name: pnum
+        description: permit number.
+        required: true
+        schema:
+          type: string
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Info Pull
+      summary: retrieve permit ID for given permit number
+      operationId: getPermitid
+      responses:
+        '200':
+          description: 'Retrieved permit ID'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  research_project_id:
+                    type: integer
+        '400':
+          description: 'Could not retrieve permit ID'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve permit_id from database'
+
+  /permitsview:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Info Pull
+      summary: retrieve full list of permits
+      operationId: getPermits
+      responses:
+        '200':
+          description: 'Retrieved permit data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermitsData'
+        '400':
+          description: 'Could not retrieve permits'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve permits from database'
+
+  /grouping:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Info Pull
+      summary: retrieve list of groupings
+      operationId: getGroupings
+      responses:
+        '200':
+          description: 'Retrieved groupings'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  grouping_name:
+                    type: string
+        '400':
+          description: 'Could not retrieve groupings'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve groupings from database'
+
+  /species:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Info Pull
+      summary: retrieve list of species
+      operationId: getSpecies
+      responses:
+        '200':
+          description: 'Retrieved species'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  common_name:
+                    type: string
+        '400':
+          description: 'Could not retrieve species'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve species from database'
+          
+  /speciesgrouping:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Info Pull
+      summary: retrieve list of grouping species pairs
+      operationId: getSpeciesGroupings
+      responses:
+        '200':
+          description: 'Retrieved species groupings'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  grouping_name:
+                    type: string
+                  common_name:
+                    type: string
+        '400':
+          description: 'Could not retrieve species grouping pairs'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve groupings/species from database'
+
+  /depthgroupings:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Info Pull
+      summary: retrieve list of grouping species pairs that have depth bins
+      operationId: getDepthGroupings
+      responses:
+        '200':
+          description: 'Retrieved grouping species with depth bins'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  grouping_name:
+                    type: string
+                  common_name:
+                    type: string
+        '400':
+          description: 'Could not retrieve grouping species with depth bins'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve grouping species with depth bins from database'
+
+  /orgnames:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Info Pull
+      summary: retrieve list of organization names
+      operationId: getOrgNames
+      responses:
+        '200':
+          description: 'Retrieved organization names'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+        '400':
+          description: 'Could not retrieve organization names'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve org names from database'
+
+components:
+  securitySchemes:
+    bearerAuth: # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # optional, arbitrary value for documentation purposes
+  schemas:    
+    Permit:
+      type: object
+      required:
+        - research_project_id
+      properties:
+        permit_number:
+          type: string
+        organization_name:
+          type: string
+          description: Required if newOrg not specified
+        new_org:
+          type: string
+          description: Required if organizationName
+        project_name:
+          type: string
+        permit_year:
+          type: number
+        start_date:
+          type: string
+        end_date:
+          type: string
+        mortality_credits_applicable:
+          type: boolean
+        point_of_contact:
+          type: string
+        email:
+          type: string
+        data_status_id:
+          type: number
+        issued_by:
+          type: string
+        principle_investigator:
+          type: string
+        notes:
+          type: string
+        staffNotes:
+          type: string
+        research_project_id:
+          type: number
+    NewPermit:
+      type: object
+      required:
+        - permit_number
+      properties:
+        permit_number:
+          type: string
+        organization_name:
+          type: string
+          description: Required if newOrg not specified
+        new_org:
+          type: string
+          description: Required if organizationName
+        project_name:
+          type: string
+        permit_year:
+          type: number
+        start_date:
+          type: string
+        end_date:
+          type: string
+        mortality_credits_applicable:
+          type: boolean
+        point_of_contact:
+          type: string
+        email:
+          type: string
+        data_status_id:
+          type: number
+        issued_by:
+          type: string
+        principle_investigator:
+          type: string
+        notes:
+          type: string
+        staffNotes:
+          type: string
+    CatchData:
+      type: object
+      properties:
+        catch_id:
+          type: integer
+        grouping_name:
+          type: string
+        common_name:
+          type: string
+        total_catch_mt:
+          type: number
+          format: float
+        depth_bin:
+          type: string
+        percent_released_at_depth:
+          type: string
+        notes:
+          type: string
+        research_project_id:
+          type: integer
+    PermitsData:
+      type: object
+      properties:
+        permit_number:
+          type: string
+        organization_name:
+          type: string
+        project_name:
+          type: string
+        permit_year:
+          type: integer
+        start_date:
+          type: string
+        end_date:
+          type: string
+        mortality_credits_applicable:
+          type: boolean
+        point_of_contact:
+          type: string
+        data_status:
+          type: string
+        delivery_date:
+          type: string
+        issued_by:
+          type: string
+        principle_investigator:
+          type: string
+        notes:
+          type: string
+        staff_notes:
+          type: string
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            type: 'object'
+            properties:
+              status:
+                type: integer
+                format: int64
+              message:
+                type: string
+          examples:
+            Malformed:
+              value:
+                status: 401
+                message: 'jwt malformed'
+              summary: 'JWT malformed'
+            Expired:
+              value:
+                status: 401
+                message: 'jwt expired'
+              summary: 'JWT lifetime expired'
+            InvalidSignature:
+              value:
+                status: 401
+                message: 'invalid signature'
+              summary: 'JWT signed with different private key'
+            InsufficientPrivs:
+              value:
+                status: 401
+                message: 'Insufficient role privileges'
+              summary: 'User does not have required role'

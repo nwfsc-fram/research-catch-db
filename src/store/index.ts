@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 
 // we first import the module
 import sPermit from './sPermit'
+import { auth } from '@boatnet/bn-auth';
 
 Vue.use(Vuex)
 
@@ -10,7 +11,8 @@ export default function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
     modules: {
       // then we reference it
-      sPermit
+      sPermit,
+      auth
     },
 
     // enable strict mode (adds overhead!)

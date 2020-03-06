@@ -1,0 +1,139 @@
+// Dev Auth Server - simulates an auth server
+// For Boatnet app development use, without an actual auth endpoint.
+
+// FRAM Data Team 2019
+
+import express from 'express';
+import cors from 'cors';
+import { Application } from 'express';
+import * as https from 'https';
+import { resolve } from 'path';
+import moment from 'moment';
+import session from 'express-session';
+
+const OpenApiValidator = require('express-openapi-validator').OpenApiValidator;
+
+import { login } from './routes/login.route';
+
+import { RSA_PRIVATE_KEY, RSA_CERT } from './util/security';
+import { validateJwtRequest } from './middleware/get-user.middleware';
+import {
+  getPermitsView,
+  getGroupingList,
+  getSpeciesList,
+  getSpeciesGrouping,
+  getDepthGroupings,
+  getOrgNames,
+  getPermitId,
+  addPermit,
+  addCatchData,
+  getCatchData,
+  deleteCatchData,
+  updatePermit,
+  deletePermit
+} from './routes/researchcatch.db.route';
+
+const app: Application = express();
+
+const commandLineArgs = require('command-line-args');
+
+const optionDefinitions = [{ name: 'secure', type: Boolean }];
+
+const options = commandLineArgs(optionDefinitions);
+
+app.use(
+  session({
+    secret: 'unused',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: true }
+  })
+);
+app.use(express.json());
+app.use(cors());
+app.disable('x-powered-by'); // Disable express version sharing
+
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerDocument =  YAML.load(resolve(__dirname, 'openapi.yaml'));
+
+// OpenAPI Spec
+app.use('/spec', express.static(resolve(__dirname, 'openapi.yaml')));
+// API Swagger UI
+app.use('/rcat/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+
+
+new OpenApiValidator({
+  apiSpecPath: './src/openapi.yaml'
+}).install(app);
+
+const API_VERSION = 'v1';
+// REST API
+
+// get BOATNET_OBSERVER users / roles
+// TODO: Refactor to collapse calls to validateJwtRequest?
+
+app.use('/rcat/api/' + API_VERSION + '/permits', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/permits').post(addPermit)
+app.route('/rcat/api/' + API_VERSION + '/permits').put(updatePermit)
+app.route('/rcat/api/' + API_VERSION + '/permits/:permitnum').delete(deletePermit)
+
+app.use('/rcat/api/' + API_VERSION + '/catch', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/catch').post(addCatchData)
+app.route('/rcat/api/' + API_VERSION + '/catch/:pid').get(getCatchData)
+app.route('/rcat/api/' + API_VERSION + '/catch/:pid').delete(deleteCatchData)
+
+app.use('/rcat/api/' + API_VERSION + '/permitid', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/permitid/:pnum').get(getPermitId)
+
+app.use('/rcat/api/' + API_VERSION + '/permitsview', validateJwtRequest); // validate first
+app.route('/rcat/api/' + API_VERSION + '/permitsview').get(getPermitsView);
+
+app.use('/rcat/api/' + API_VERSION + '/grouping', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/grouping').get(getGroupingList);
+
+app.use('/rcat/api/' + API_VERSION + '/aspecies', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/species').get(getSpeciesList)
+
+app.use('/rcat/api/' + API_VERSION + '/speciesgrouping', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/speciesgrouping').get(getSpeciesGrouping)
+
+app.use('/rcat/api/' + API_VERSION + '/depthgroupings', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/depthgroupings').get(getDepthGroupings)
+
+app.use('/rcat/api/' + API_VERSION + '/orgnames', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/orgnames').get(getOrgNames)
+
+
+// Handle bad requests
+app.use((err: any, req: any, res: any, next: any) => {
+  if (!err) return next();
+  console.log(moment().format(), 'Bad request. ', req.ip, err.message);
+  return res.status(400).json({
+    status: 400,
+    error: 'Bad request.'
+  });
+});
+
+if (options.secure) {
+  const httpsServer = https.createServer(
+    {
+      // Temporary Keys, not secret and publically shared
+      key: RSA_PRIVATE_KEY,
+      cert: RSA_CERT
+    },
+    app
+  );
+
+  // launch an HTTPS Server. Note: this does NOT mean that the application is secure
+  httpsServer.listen(9200, () => {
+    const address: any = httpsServer.address();
+    console.log(
+      'HTTPS Secure Server running at https://localhost:' + address.port
+    );
+  });
+} else {
+  // launch an HTTP Server
+  throw new Error('Only HTTPS server is allowed for auth.');
+}

@@ -1,4 +1,5 @@
 import { RouteConfig } from 'vue-router';
+import Login from '../pages/Login.vue';
 import Permits from '../pages/Permits.vue';
 import PermitDetailsUser from '../pages/PermitDetailsUser.vue';
 import PermitDetailsStaff from '../pages/PermitDetailsStaff.vue';
@@ -9,7 +10,7 @@ const routes: RouteConfig[] = [
     path: '/',
     component: () => import('layouts/MyLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Index.vue') },
+      { path: '', name: 'Login', component: Login},
       { path: '/permits', name: 'Permits', component: Permits},
       { path: '/permitdetails-user', name: 'PermitDetailsUser', component: PermitDetailsUser},
       { path: '/permitdetails-staff', name: 'PermitDetailsStaff', component: PermitDetailsStaff},

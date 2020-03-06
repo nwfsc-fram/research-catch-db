@@ -32,6 +32,7 @@ import Vue from 'vue';
 //import { State, Action, Getter } from 'vuex-class';
 import Component from 'vue-class-component';
 import axios from 'axios';
+import { authService } from '@boatnet/bn-auth/lib';
 
 @Component
 export default class GroupingManagement extends Vue {
@@ -39,6 +40,7 @@ export default class GroupingManagement extends Vue {
   groupingList = [];
   year = 9999;
   temp_years = [2019, 2020];
+  authConfig: object = {};
 
   columnsA = [
     {
@@ -63,13 +65,15 @@ export default class GroupingManagement extends Vue {
   }
 
   mounted() {
+    const token = authService.getCurrentUser()!.jwtToken!;
+    this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
     axios
-      .get('http://localhost:8080/api/permitsview')
+      .get('rcat/api/v1/permitsview', this.authConfig)
       .then(response => (this.data = response.data));
     // temp, update this to pull current year
     this.year = 2019;
     axios
-      .get('http://localhost:8080/api/grouping')
+      .get('rcat/api/v1/grouping', this.authConfig)
       .then(response => (this.groupingList = response.data))
       .catch(error => {
         console.log(error.response);
