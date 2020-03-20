@@ -19,6 +19,14 @@
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered content-class="bg-grey-2">
       <q-list>
+        <q-item to="/">
+          <q-item-section avatar>
+            <q-icon name="meeting_room" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Login</q-item-label>
+          </q-item-section>
+        </q-item>
         <q-item to="/permits" exact>
           <q-item-section avatar>
             <q-icon name="directions_boat" />

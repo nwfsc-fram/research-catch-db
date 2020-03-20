@@ -521,6 +521,24 @@ export async function deleteCatchData(request: Request, response: Response) {
   }
 }
 
+// Get grouping species ids currently used for catch entries
+export async function getCatchSGIds(request: Request, response: Response) {
+  try{
+    let result = await pool.query('SELECT DISTINCT grouping_species_id FROM "CATCH";');
+    let idArr: number[] = [];
+    for (let row of result.rows) {
+      idArr.push(row.grouping_species_id);
+    }
+    response.status(200).json({grouping_species_ids: idArr});
+  } catch (err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve grouping species ids for catch in database'
+    });
+  }
+}
+
 /* Add set of new species grouping rows into the GROUPING_SPECIES table for
 a new year. Rows are copied from the prior years set */
 export async function addNewYearGrouping(request: Request, response: Response) {
@@ -531,9 +549,28 @@ export async function addNewYearGrouping(request: Request, response: Response) {
     await pool.query('ALTER TABLE temp_group_copy DROP COLUMN grouping_species_id');
     await pool.query('INSERT INTO "GROUPING_SPECIES" (grouping_id, species_id, year, south_boundary, north_boundary) SELECT * FROM temp_group_copy');
     await pool.query('DROP TABLE temp_group_copy');
+    await pool.query(`do $$
+                        declare
+                          arec record;
+                          foo integer;
+                        BEGIN
+                          FOR arec IN
+                            SELECT grouping_species_id FROM "GROUPING_SPECIES_VIEW"
+                            WHERE common_name IN ('Canary Rockfish','Cowcod Rockfish','Yelloweye Rockfish')
+                            AND year=${request.body.year}
+                          LOOP
+                            foo := arec.grouping_species_id;
+                            INSERT INTO "DEPTH_BIN" (grouping_species_id, min_depth_ftm, max_depth_ftm, discard_mortality_rate)
+                            VALUES (foo, 0, 10, 21), (foo, 10, 20, 25), 
+                                  (foo, 20, 30, 25), (foo, 30, 50, 48), 
+                                  (foo, 50, 100, 57), (foo, 100, 999999, 100);
+                          END LOOP;
+                        END;
+                      $$;`);
     response.status(200).send('New groupings for ' + request.body.year + ' succesfully added');
   } catch (err) {
     await pool.query('DROP TABLE IF EXISTS temp_group_copy');
+    console.log(err);
     response.status(400).json({
       status: 400,
       message: 'Could not add new groupings for year ' + request.body.year + ': ' + err.message

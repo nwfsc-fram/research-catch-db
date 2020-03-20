@@ -377,6 +377,42 @@ paths:
                 status: 400
                 message: 'Could not delete catch data'
 
+  /catchgs:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: retrieve grouping species ids used in catch
+      operationId: getCatchGs
+      responses:
+        '200':
+          description: 'Retrieved catch grouping species ids'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  grouping_species_ids:
+                    type: array
+                    items:
+                      type: integer        
+        '400':
+          description: 'Could not retrieve catch grouping species values from database'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve grouping species ids for catch in database'
+
   /permitid/{pnum}:
     parameters:
       - in: path

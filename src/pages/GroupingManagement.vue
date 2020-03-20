@@ -136,7 +136,7 @@
     </div>
     <br />
     <div class="q-gutter-md row justify-center">
-      <q-btn color="positive" label="Save" :disable="!this.editedBool" @click="saveChanges" />
+      <q-btn color="positive" label="Save" :disable="!this.editedBool" @click="saveCheck" />
     </div>
 
     <q-dialog v-model="removeDialog1" persistent>
@@ -171,7 +171,7 @@
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="saveDialog" persistent>
+    <q-dialog v-model="notSavedDialog" persistent>
       <q-card>
         <q-card-section class="row items-center">
           <q-icon name="warning" color="primary" size="56px" />
@@ -188,7 +188,24 @@
       </q-card>
     </q-dialog>
 
-    <div>{{ temp }}</div>
+    <q-dialog v-model="saveDialog" persistent>
+      <q-card>
+        <q-card-section class="row items-center">
+          <q-icon name="warning" color="primary" size="56px" />
+          <span class="q-ml-sm">
+            Changes made to grouping species rows that are currently
+            being used by catch data, continue with save?
+          </span>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Yes" color="primary" @click="saveChanges" v-close-popup />
+          <q-btn flat label="No" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <div>{{ catchUsing }}</div>
   </div>
 </template>
 
@@ -222,11 +239,13 @@ export default class GroupingManagement extends Vue {
   yearModel = 2019;
   currentYear = 2019;
   yearList: number[] = [];
+  catchUsing: number[] = [];
   authConfig: object = {};
   selectedTab1: GroupingRow[] = [];
   selectedTab2: GroupingSpeciesRow[] = [];
   loading: boolean = false;
   editedBool: boolean = false;
+  notSavedDialog: boolean = false;
   saveDialog: boolean = false;
   removeDialog1: boolean = false;
   removeDialog2: boolean = false;
@@ -281,7 +300,7 @@ export default class GroupingManagement extends Vue {
     if (!this.editedBool) {
       this.yearChanged();
     } else {
-      this.saveDialog = true;
+      this.notSavedDialog = true;
     }
   }
 
@@ -319,10 +338,9 @@ export default class GroupingManagement extends Vue {
   async addNewYear() {
     // turn on spinny wheel
     this.loading = true;
+    let newYear = Math.max(...this.yearList) + 1;
 
     try {
-      let output = await axios.get('rcat/api/v1/groupmanage', this.authConfig);
-      let newYear: number = output.data[0]['max'] + 1;
       await axios.post(
         'rcat/api/v1/groupmanage',
         { year: newYear },
@@ -333,6 +351,8 @@ export default class GroupingManagement extends Vue {
         color: 'green'
       });
       this.yearList.push(newYear);
+      this.yearModel = newYear;
+      this.yearChanged();
     } catch (error) {
       console.log('error', error);
       this.$q.notify({
@@ -369,6 +389,19 @@ export default class GroupingManagement extends Vue {
     }
     if (newValue !== initialValue) {
       this.editedBool = true;
+    }
+  }
+
+  saveCheck() {
+    // Get list grouping species ids used by catch data
+    // that overlap with changed rows
+    let overlap = Object.keys(this.speciesGroupingUpdates).filter(
+      value => -1 !== this.catchUsing.indexOf(Number(value))
+    );
+    if (overlap.length > 0) {
+      this.saveDialog = true;
+    } else {
+      this.saveChanges();
     }
   }
 
@@ -445,7 +478,11 @@ export default class GroupingManagement extends Vue {
     // New grouping species entries
     let newGroupingSpeciesRows: object[] = [];
     for (let row of this.speciesGroupingList) {
-      if (row.grouping_species_id === 'new' && row.grouping_name && row.common_name) {
+      if (
+        row.grouping_species_id === 'new' &&
+        row.grouping_name &&
+        row.common_name
+      ) {
         console.log(row);
         newGroupingSpeciesRows.push({
           grouping_name: row.grouping_name,
@@ -460,7 +497,11 @@ export default class GroupingManagement extends Vue {
     if (newGroupingSpeciesRows.length > 0) {
       let uploadObject3 = { update_data: newGroupingSpeciesRows };
       try {
-        await axios.post('rcat/api/v1/speciesgrouping/', uploadObject3, this.authConfig);
+        await axios.post(
+          'rcat/api/v1/speciesgrouping/',
+          uploadObject3,
+          this.authConfig
+        );
         this.$q.notify({
           message: 'New Grouping Species rows saved to database',
           color: 'green'
@@ -612,6 +653,12 @@ export default class GroupingManagement extends Vue {
     axios
       .get('rcat/api/v1/groupmanage', this.authConfig)
       .then(response => (this.yearList = response.data.map(a => a.year)))
+      .catch(error => {
+        console.log(error.response);
+      });
+    axios
+      .get('/rcat/api/v1/catchgs', this.authConfig)
+      .then(response => (this.catchUsing = response.data.grouping_species_ids))
       .catch(error => {
         console.log(error.response);
       });
