@@ -30,7 +30,14 @@ import {
   getCatchData,
   deleteCatchData,
   updatePermit,
-  deletePermit
+  deletePermit,
+  addNewYearGrouping,
+  getGroupYears,
+  deleteGroupingSpecies,
+  deleteGroupSet,
+  updateSpeciesGrouping,
+  updateGrouping,
+  addSpeciesGrouping
 } from './routes/researchcatch.db.route';
 
 const app: Application = express();
@@ -74,33 +81,42 @@ const API_VERSION = 'v1';
 // get BOATNET_OBSERVER users / roles
 // TODO: Refactor to collapse calls to validateJwtRequest?
 
-app.use('/rcat/api/' + API_VERSION + '/permits', validateJwtRequest);
-app.route('/rcat/api/' + API_VERSION + '/permits').post(addPermit)
-app.route('/rcat/api/' + API_VERSION + '/permits').put(updatePermit)
-app.route('/rcat/api/' + API_VERSION + '/permits/:permitnum').delete(deletePermit)
+app.use('/rcat/api/' + API_VERSION + '/permits', validateJwtRequest); // validate first
+app.route('/rcat/api/' + API_VERSION + '/permits').post(addPermit);
+app.route('/rcat/api/' + API_VERSION + '/permits').put(updatePermit);
+app.route('/rcat/api/' + API_VERSION + '/permits/:permitnum').delete(deletePermit);
 
 app.use('/rcat/api/' + API_VERSION + '/catch', validateJwtRequest);
-app.route('/rcat/api/' + API_VERSION + '/catch').post(addCatchData)
-app.route('/rcat/api/' + API_VERSION + '/catch/:pid').get(getCatchData)
-app.route('/rcat/api/' + API_VERSION + '/catch/:pid').delete(deleteCatchData)
+app.route('/rcat/api/' + API_VERSION + '/catch').post(addCatchData);
+app.route('/rcat/api/' + API_VERSION + '/catch/:pid').get(getCatchData);
+app.route('/rcat/api/' + API_VERSION + '/catch/:pid').delete(deleteCatchData);
+
+app.use('/rcat/api/' + API_VERSION + '/groupmanage', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/groupmanage').post(addNewYearGrouping);
+app.route('/rcat/api/' + API_VERSION + '/groupmanage').get(getGroupYears);
+app.route('/rcat/api/' + API_VERSION + '/groupmanage/:gid').delete(deleteGroupingSpecies)
 
 app.use('/rcat/api/' + API_VERSION + '/permitid', validateJwtRequest);
-app.route('/rcat/api/' + API_VERSION + '/permitid/:pnum').get(getPermitId)
+app.route('/rcat/api/' + API_VERSION + '/permitid/:pnum').get(getPermitId);
 
-app.use('/rcat/api/' + API_VERSION + '/permitsview', validateJwtRequest); // validate first
+app.use('/rcat/api/' + API_VERSION + '/permitsview', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/permitsview').get(getPermitsView);
 
 app.use('/rcat/api/' + API_VERSION + '/grouping', validateJwtRequest);
-app.route('/rcat/api/' + API_VERSION + '/grouping').get(getGroupingList);
+app.route('/rcat/api/' + API_VERSION + '/grouping').put(updateGrouping);
+app.route('/rcat/api/' + API_VERSION + '/grouping/:groupingid/:year').delete(deleteGroupSet);
+app.route('/rcat/api/' + API_VERSION + '/grouping/:year').get(getGroupingList);
 
-app.use('/rcat/api/' + API_VERSION + '/aspecies', validateJwtRequest);
-app.route('/rcat/api/' + API_VERSION + '/species').get(getSpeciesList)
+app.use('/rcat/api/' + API_VERSION + '/species', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/species/:year').get(getSpeciesList);
 
 app.use('/rcat/api/' + API_VERSION + '/speciesgrouping', validateJwtRequest);
-app.route('/rcat/api/' + API_VERSION + '/speciesgrouping').get(getSpeciesGrouping)
+app.route('/rcat/api/' + API_VERSION + '/speciesgrouping').post(addSpeciesGrouping);
+app.route('/rcat/api/' + API_VERSION + '/speciesgrouping').put(updateSpeciesGrouping);
+app.route('/rcat/api/' + API_VERSION + '/speciesgrouping/:year').get(getSpeciesGrouping);
 
 app.use('/rcat/api/' + API_VERSION + '/depthgroupings', validateJwtRequest);
-app.route('/rcat/api/' + API_VERSION + '/depthgroupings').get(getDepthGroupings)
+app.route('/rcat/api/' + API_VERSION + '/depthgroupings').get(getDepthGroupings);
 
 app.use('/rcat/api/' + API_VERSION + '/orgnames', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/orgnames').get(getOrgNames)

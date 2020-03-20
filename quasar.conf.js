@@ -96,6 +96,7 @@ module.exports = function (ctx) {
         '/api/v1': {
           target: 'https://localhost:9000',
           changeOrigin: true,
+          secure: false,
           pathRewrite: {
             '^/api/v1': ''
           }

@@ -58,6 +58,7 @@ module.exports = {
   rules: {
     'prefer-promise-reject-errors': 'off',
     quotes: ['warn', 'single'],
+    '@typescript-eslint/camelcase': ['warn', {properties: 'never'}],
     '@typescript-eslint/indent': ['warn', 2],
 
     // allow console.log during development only

@@ -277,9 +277,6 @@
       </q-card-section>
     </q-card>
 
-    <div>{{ depthGroupings }}</div>
-    <div>{{ data }}</div>
-
     <q-dialog v-model="submissionConfirmation">
       <q-card>
         <q-card-section>
@@ -560,6 +557,7 @@ export default class Permits extends Vue {
       }
 
       // if depth captured present, make sure it's an applicable species grouping
+      // if this is dependent on year will have to make some changes to this
       if (
         row.depthCaptured &&
         row.depthCaptured !== 'NA' &&
@@ -645,7 +643,7 @@ export default class Permits extends Vue {
     const token = authService.getCurrentUser()!.jwtToken!;
     this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
     axios
-      .get('rcat/api/v1/grouping', this.authConfig)
+      .get('rcat/api/v1/grouping/' + this.permit['permit_year'], this.authConfig)
       .then(
         response =>
           (this.groupingList = response.data.map(a => a.grouping_name))
@@ -654,7 +652,7 @@ export default class Permits extends Vue {
         console.log(error.response);
       });
     axios
-      .get('rcat/api/v1/species', this.authConfig)
+      .get('rcat/api/v1/species/' + this.permit['permit_year'], this.authConfig)
       .then(
         response =>
           (this.speciesList = response.data.map(a => a.common_name).sort())
@@ -674,7 +672,7 @@ export default class Permits extends Vue {
         console.log(error.response);
       });
     axios
-      .get('rcat/api/v1/speciesgrouping', this.authConfig)
+      .get('rcat/api/v1/speciesgrouping/' + this.permit['permit_year'], this.authConfig)
       .then(response => {
         this.groupingSpeciesList = response.data.map(a =>
           a.grouping_name.concat(a.common_name)

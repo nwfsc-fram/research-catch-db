@@ -10,6 +10,8 @@ tags:
     description: Permit Management
   - name: Catch
     description: Catch Data Management
+  - name: Grouping Management
+    description: Managing Groupings per Year
   - name: Info Pull
     description: Various DB reads
 
@@ -134,6 +136,131 @@ paths:
                 status: 400
                 message: 'Could not delete permit'
 
+  /groupmanage:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: Add new year of grouping species entries
+      operationId: postGroupManage
+      requestBody:
+        description: Need year of new groupings
+        content:
+          application/json:
+            schema:
+              type: 'object'
+              properties:
+                year:
+                  type: integer
+            example:
+              year: 2021
+        required: true
+      responses:
+        '200':
+          description: 'New grouping rows were successfully added'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not add new groupings to database'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not add new groupings for year 2021'
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: Get list of years that have grouping species entries
+      operationId: getGroupManage
+      responses:
+        '200':
+          description: 'Retrieved year list'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not retrieve year list'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve year list'
+
+  /groupmanage/{gid}:
+    parameters:
+      - in: path
+        name: gid
+        description: grouping species ID number
+        required: true
+        schema:
+          type: string
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: Delete grouping species in grouping species table
+      operationId: deleteGroupingSpecies
+      responses:
+        '200':
+          description: 'Grouping Species succesfully deleted'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not delete grouping species'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not delete grouping species with id: 234'
+        '403':
+          description: 'Could not delete grouping species because catch data is using row'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 403
+                message: 'Could not delete grouping species with id: 234, catch data is using this entry'
+   
   /catch:
     post:
       security:
@@ -323,12 +450,117 @@ paths:
                 message: 'Could not retrieve permits from database'
 
   /grouping:
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: Adds new grouping entries if they do not exist.
+      operationId: putGroupings
+      requestBody:
+        description: Need grouping names
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupingData'
+        required: true
+      responses:
+        '200':
+          description: 'Grouping LU row/s added'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not update grouping table'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not update grouping table'
+
+  /grouping/{groupingid}/{year}:
+    parameters:
+      - in: path
+        name: groupingid
+        description: grouping id of deletion set
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: year
+        description: year
+        required: true
+        schema:
+          type: integer
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: remove grouping species rows for a grouping/year set
+      operationId: deleteGroupingSpecies
+      responses:
+        '200':
+          description: 'Grouping records succesfully deleted'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not delete grouping records'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not delete grouping species records with grouping id: 234'
+        '403':
+          description: 'Could not delete grouping species rows because catch data is using row/s'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 403
+                message: 'Could not delete grouping species rows with grouping id: 234, catch data are using entries'
+   
+
+  /grouping/{year}:
+    parameters:
+      - in: path
+        name: year
+        description: year
+        required: true
+        schema:
+          type: integer
     get:
       security:
         - bearerAuth: []
       tags:
         - Info Pull
-      summary: retrieve list of groupings
+      summary: retrieve list of groupings for particular year
       operationId: getGroupings
       responses:
         '200':
@@ -356,13 +588,20 @@ paths:
                 status: 400
                 message: 'Could not retrieve groupings from database'
 
-  /species:
+  /species/{year}:
+    parameters:
+      - in: path
+        name: year
+        description: year
+        required: true
+        schema:
+          type: string
     get:
       security:
         - bearerAuth: []
       tags:
         - Info Pull
-      summary: retrieve list of species
+      summary: retrieve list of species for given year
       operationId: getSpecies
       responses:
         '200':
@@ -389,14 +628,95 @@ paths:
               example:
                 status: 400
                 message: 'Could not retrieve species from database'
-          
+   
   /speciesgrouping:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: Add new species grouping rows
+      operationId: postSpeciesGroupings
+      requestBody:
+        description: Need grouping_id and species_id, grouping_species_id will be autogenerated by DB
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewSpeciesGroupingData'
+        required: true
+      responses:
+        '200':
+          description: 'New Species Grouping row/s added'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not update species grouping table'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not update species grouping table'
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: Update species grouping table
+      operationId: putSpeciesGroupings
+      requestBody:
+        description: Need grouping species data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpeciesGroupingData'
+        required: true
+      responses:
+        '200':
+          description: 'Species Grouping row/s updated'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not update species grouping table'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not update species grouping table'
+
+  /speciesgrouping/{year}:
+    parameters:
+      - in: path
+        name: year
+        description: year
+        required: true
+        schema:
+          type: string
     get:
       security:
         - bearerAuth: []
       tags:
         - Info Pull
-      summary: retrieve list of grouping species pairs
+      summary: retrieve list of grouping species pairs for a given year
       operationId: getSpeciesGroupings
       responses:
         '200':
@@ -579,6 +899,83 @@ components:
           type: string
         staffNotes:
           type: string
+    SpeciesGroupingData:
+      type: object
+      required:
+        - update_data
+      properties:
+        update_data:
+          type: array
+          items:
+            type: object
+            properties:
+              grouping_species_id:
+                type: integer
+              grouping_name:
+                type: string
+              common_name:
+                type: string
+              south_boundary:
+                type: number
+                format: float
+              north_boundary:
+                type: number
+                format: float
+          example:
+            [{grouping_species_id: 1456,
+              grouping_name: "English sole",
+              common_name: "British Sole",
+              south_boundary: 43,
+              north_boundary: 23},
+             {grouping_species_id: 1455,
+              grouping_name: "Groundfish unid",
+              common_name: "British Groundfish"}]
+    NewSpeciesGroupingData:
+      type: object
+      required:
+        - update_data
+      properties:
+        update_data:
+          type: array
+          items:
+            type: object
+            properties:
+              grouping_name:
+                type: string
+              common_name:
+                type: string
+              year:
+                type: integer
+              south_boundary:
+                type: number
+                format: float
+              north_boundary:
+                type: number
+                format: float
+          example:
+            [{grouping_name: "New sole",
+              common_name: "Newage Sole",
+              year: 2021,
+              south_boundary: 43,
+              north_boundary: 23},
+             {grouping_name: "Groundfish forever",
+              common_name: "British Groundfish",
+              year: 2021}]
+    GroupingData:
+      type: object
+      required:
+        - update_data
+      properties:
+        update_data:
+          type: array
+          items:
+            type: object
+            properties:
+              grouping_name:
+                type: string
+          example:
+            [{grouping_name: "English sole"},
+             {grouping_name: "Groundfish unid"}]
     CatchData:
       type: object
       properties:
