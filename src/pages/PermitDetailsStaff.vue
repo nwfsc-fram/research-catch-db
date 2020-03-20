@@ -237,10 +237,6 @@
           <div>Save unsuccessful: {{ errorMessage }}</div>
         </q-card-section>
       </q-card>
-      <br />
-      <div class="q-mt-md">{{ permit }}</div>
-      <div class="q-mt-md">Is New: {{ isNew.toString() }}</div>
-      <div class="q-mt-md">{{ data }}</div>
     </q-form>
   </div>
 </template>
@@ -524,7 +520,7 @@ export default class Permits extends Vue {
         .then(response => (this.data = response.data))
         .catch(error => {
           console.log(error.response);
-      });
+        });
     }
   }
 }

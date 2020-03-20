@@ -29,7 +29,7 @@
             flat
             dense
             color="primary"
-            v-if="selected.length !== 0"
+            :disable="selected.length === 0"
             :label="editButtonText"
             @click="editRow"
           />
@@ -39,13 +39,14 @@
             dense
             color="primary"
             label="Delete Permit"
-            v-if="(selected.length !== 0) && poweruser"
+            v-if="poweruser"
+            :disable="selected.length === 0"
             @click="confirm = true"
           />
           <q-dialog v-model="confirm" persistent>
             <q-card>
               <q-card-section class="row items-center">
-                <q-avatar color="primary" text-color="white" />
+                <q-icon name="delete_forever" color="primary" size="56px" />
                 <span
                   class="q-ml-sm"
                 >Do you really want to remove the permit entry for {{ permit['permit_number'] }}</span>
@@ -65,8 +66,6 @@
           </q-input>
         </template>
       </q-table>
-      <div class="q-mt-md">Vuex store has: {{ permit }}</div>
-      <div class="q-mt-md">Is New: {{ isNew.toString() }}</div>
     </div>
   </div>
 </template>
@@ -114,23 +113,27 @@ export default class Permits extends Vue {
         this.$router.push('/permitdetails-user');
       }
     } catch (error) {
-      console.log('error', error);
+      console.log(error.response);
       //display some error
     }
   }
 
   async deleteRow() {
-    // Delete the row with the specified permit value
-    await axios.delete(
-      'rcat/api/v1/permits/' + this.selected[0].permit_number,
-      this.authConfig
-    );
+    try {
+      // Delete the row with the specified permit value
+      await axios.delete(
+        'rcat/api/v1/permits/' + this.selected[0].permit_number,
+        this.authConfig
+      );
 
-    // Now that the value is deleted from the DB reload the table
-    this.selected = [];
-    axios
-      .get('rcat/api/v1/permitsview', this.authConfig)
-      .then(response => (this.data = response.data));
+      // Now that the value is deleted from the DB reload the table
+      this.selected = [];
+      axios
+        .get('rcat/api/v1/permitsview', this.authConfig)
+        .then(response => (this.data = response.data));
+    } catch (error) {
+      console.log(error.response);
+    }
   }
 
   newSelection(details) {
