@@ -23,11 +23,19 @@ const routes: RouteConfig[] = [
       { path: '/', name: 'Login', component: Login},
       { path: '/permits', name: 'Permits', component: Permits,
         beforeEnter: (to, from, next) => {
+          if (isAuthorized(['research-catch-staff', 'research-catch-user'])) { return next(); } else { return next('/'); }
+        }
+      },
+      { path: '/permitdetails-user', name: 'PermitDetailsUser', component: PermitDetailsUser,
+        beforeEnter: (to, from, next) => {
+          if (isAuthorized(['research-catch-user'])) { return next(); } else { return next('/'); }
+        }
+      },
+      { path: '/permitdetails-staff', name: 'PermitDetailsStaff', component: PermitDetailsStaff,
+        beforeEnter: (to, from, next) => {
           if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/'); }
         }
       },
-      { path: '/permitdetails-user', name: 'PermitDetailsUser', component: PermitDetailsUser},
-      { path: '/permitdetails-staff', name: 'PermitDetailsStaff', component: PermitDetailsStaff},
       { path: '/grouping-management', name: 'GroupingManagement', component: GroupingManagement,
         beforeEnter: (to, from, next) => {
           if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/'); }

@@ -92,7 +92,7 @@ export default class Permits extends Vue {
   columns: object[] = [];
   confirm = false;
   authConfig: object = {};
-  poweruser = true;
+  poweruser = authService.getCurrentUser()!.roles.includes('research-catch-staff');
 
   addRow() {
     // clear vuex store

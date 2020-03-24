@@ -35,7 +35,7 @@
             <q-item-label>Permits</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item to="/grouping-management" >
+        <q-item to="/grouping-management" v-if="isAuthorized(['research-catch-staff'])">
           <q-item-section avatar>
             <q-icon name="developer_board" />
           </q-item-section>
@@ -43,7 +43,7 @@
             <q-item-label>Manage Groupings</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item clickable tag="a" target="_blank" href="https://quasar.dev">
+        <q-item v-if="isAuthorized(['research-catch-staff'])" clickable tag="a" target="_blank" href="https://quasar.dev">
           <q-item-section avatar>
             <q-icon name="assignment" />
           </q-item-section>
@@ -77,9 +77,19 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import { authService } from '@boatnet/bn-auth/lib';
 
 @Component
 export default class MyLayout extends Vue {
   leftDrawerOpen = false;
+
+  private isAuthorized(authorizedRoles: string[]) {
+    for (const role of authorizedRoles) {
+      if (authService.getCurrentUser()!.roles.includes(role)) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 </script>
