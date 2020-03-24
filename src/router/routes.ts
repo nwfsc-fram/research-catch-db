@@ -17,28 +17,41 @@ function isAuthorized(authorizedRoles: string[]) {
 
 const routes: RouteConfig[] = [
   {
+    path: '/login', 
+    name: 'Login', 
+    component: Login
+  },
+  {
     path: '/',
     component: () => import('layouts/MyLayout.vue'),
+    beforeEnter: (to, from, next) => {
+      if (authService.isLoggedIn()) { return next(); } else { return next('/login'); }
+    },
     children: [
-      { path: '/', name: 'Login', component: Login},
       { path: '/permits', name: 'Permits', component: Permits,
         beforeEnter: (to, from, next) => {
-          if (isAuthorized(['research-catch-staff', 'research-catch-user'])) { return next(); } else { return next('/'); }
+          if (isAuthorized(['research-catch-staff', 'research-catch-user'])) { return next(); } else { return next('/login'); }
         }
       },
       { path: '/permitdetails-user', name: 'PermitDetailsUser', component: PermitDetailsUser,
         beforeEnter: (to, from, next) => {
-          if (isAuthorized(['research-catch-user'])) { return next(); } else { return next('/'); }
+          if (isAuthorized(['research-catch-user'])) { return next(); } else { return next('/login'); }
         }
       },
       { path: '/permitdetails-staff', name: 'PermitDetailsStaff', component: PermitDetailsStaff,
         beforeEnter: (to, from, next) => {
-          if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/'); }
+          if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/login'); }
         }
-      },
-      { path: '/grouping-management', name: 'GroupingManagement', component: GroupingManagement,
+      }
+    ]
+  },
+  {
+    path: '/grouping-management',
+    component: () => import('layouts/MyLayout.vue'),
+    children: [
+      { path: '', name: 'GroupingManagement', component: GroupingManagement,
         beforeEnter: (to, from, next) => {
-          if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/'); }
+          if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/login'); }
         }
       }
     ]

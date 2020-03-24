@@ -123,7 +123,7 @@ export default class Login extends Vue {
       switch (mutation.type) {
         case 'auth/loginSuccess':
           console.log('I passed!');
-          this.$router.push('/permits'); // On successful login, navigate to home
+          this.$router.push('/'); // On successful login, navigate to home
           break;
         case 'auth/loginFailure':
           // todo: give user error when login fails

@@ -19,7 +19,7 @@
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered content-class="bg-grey-2">
       <q-list>
-        <q-item to="/">
+        <q-item to="/login">
           <q-item-section avatar>
             <q-icon name="meeting_room" />
           </q-item-section>

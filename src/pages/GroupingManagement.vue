@@ -632,6 +632,16 @@ export default class GroupingManagement extends Vue {
     }
   }
 
+  beforeRouteLeave (to, from, next) {
+    console.log('at least im triggering')
+    const answer = window.confirm('Do you really want to leave? you have unsaved changes!');
+    if (answer) {
+      next();
+    } else {
+      next(false);
+    }
+  }
+
   mounted() {
     const token = authService.getCurrentUser()!.jwtToken!;
     this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
