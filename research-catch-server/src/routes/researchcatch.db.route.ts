@@ -386,12 +386,27 @@ to have values in the API call, it will automatically
 asign nulls to missing fields.
 */
 export async function addCatchData(request: Request, response: Response) {
+
   let result = {
     researchProjectId: request.body.research_project_id,
+    pointOfContact: request.body.point_of_contact,
     catchData: request.body.catch_data,
     year: request.body.year
   }
 
+  // first update the delivery date timestamp
+  try {
+    await pool.query(`UPDATE "RESEARCH_PROJECT" SET delivery_date = CURRENT_TIMESTAMP,  
+      data_status_id = 1, point_of_contact = $1 WHERE research_project_id = $2;`, [result.pointOfContact, result.researchProjectId]);
+  } catch (err) {
+    console.error(err.stack);
+      response.status(400).json({
+        status: 400,
+        message: 'Could not add catch data to database: ' + err.stack
+      });
+  }
+
+  // then assemble catch data insert
   let sqlString = `INSERT INTO "CATCH" (catch_id, grouping_species_id, 
     total_catch_mt, depth_bin_id, percent_released_at_depth, notes, 
     research_project_id) VALUES `

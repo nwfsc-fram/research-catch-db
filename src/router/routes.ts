@@ -1,9 +1,11 @@
 import { RouteConfig } from 'vue-router';
 import Login from '../pages/Login.vue';
+import Home from '../pages/Home.vue';
 import Permits from '../pages/Permits.vue';
 import PermitDetailsUser from '../pages/PermitDetailsUser.vue';
 import PermitDetailsStaff from '../pages/PermitDetailsStaff.vue';
 import GroupingManagement from '../pages/GroupingManagement.vue';
+import Reports from '../pages/Reports.vue';
 import { authService } from '@boatnet/bn-auth/lib';
 
 function isAuthorized(authorizedRoles: string[]) {
@@ -24,10 +26,13 @@ const routes: RouteConfig[] = [
   {
     path: '/',
     component: () => import('layouts/MyLayout.vue'),
-    beforeEnter: (to, from, next) => {
-      if (authService.isLoggedIn()) { return next(); } else { return next('/login'); }
-    },
     children: [
+      {
+        path: '', name: 'Home', component: Home,
+        beforeEnter: (to, from, next) => {
+          if (authService.isLoggedIn()) { return next(); } else { return next('/login'); }
+        }
+      },
       { path: '/permits', name: 'Permits', component: Permits,
         beforeEnter: (to, from, next) => {
           if (isAuthorized(['research-catch-staff', 'research-catch-user'])) { return next(); } else { return next('/login'); }
@@ -42,19 +47,21 @@ const routes: RouteConfig[] = [
         beforeEnter: (to, from, next) => {
           if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/login'); }
         }
-      }
-    ]
-  },
-  {
-    path: '/grouping-management',
-    component: () => import('layouts/MyLayout.vue'),
-    children: [
-      { path: '', name: 'GroupingManagement', component: GroupingManagement,
+      },
+      { path: '/reports', name: 'Reports', component: Reports,
         beforeEnter: (to, from, next) => {
           if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/login'); }
         }
       }
     ]
+  },
+  {
+    path: '/grouping-management',
+    name: 'GroupingManagement', 
+    component: GroupingManagement,
+    beforeEnter: (to, from, next) => {
+      if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/login'); }
+    } 
   }
 ]
 

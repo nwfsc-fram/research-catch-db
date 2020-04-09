@@ -278,12 +278,15 @@ paths:
               properties:
                 research_project_id:
                   type: integer
+                point_of_contact:
+                  type: string
                 catch_data:
                   type: array
                 year:
                   type: integer
             example:
                 research_project_id: 123
+                point_of_contact: 'cod_stevens@noaa.gov'
                 catch_data: {}
                 year: 2020
         required: true

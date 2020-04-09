@@ -27,7 +27,15 @@
             <q-item-label>Login</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item to="/permits" exact>
+        <q-item to="/" exact>
+          <q-item-section avatar>
+            <q-icon name="home" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Home / FAQs</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/permits">
           <q-item-section avatar>
             <q-icon name="directions_boat" />
           </q-item-section>
@@ -43,13 +51,12 @@
             <q-item-label>Manage Groupings</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item v-if="isAuthorized(['research-catch-staff'])" clickable tag="a" target="_blank" href="https://quasar.dev">
+        <q-item to="/reports" v-if="isAuthorized(['research-catch-staff'])">
           <q-item-section avatar>
             <q-icon name="assignment" />
           </q-item-section>
           <q-item-section>
             <q-item-label>Reports</q-item-label>
-            <q-item-label caption>quasar.dev</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
@@ -59,17 +66,18 @@
       <q-toolbar>
         <q-space />
         <div class="justify-around">
-          For questions or bug reports related to the functioning of the Research
-          Catch App, please contact nmfs.nwfsc.fram.data.team@noaa.gov. For questions
-          about the scientific, catch, or permit content of the Research Cath App
-          please contact Kate Richerson (kate.e.richerson@noaa.gov) or
-          Kayleigh Somers (kayleigh.somers@noaa.gov)
+          For questions related to the functioning of the Research
+          Catch App, please contact nmfs.nwfsc.fram.data.team@noaa.gov. For 
+          the grouping or catch content please contact Kate Richerson 
+          (kate.e.richerson@noaa.gov) or Kayleigh Somers 
+          (kayleigh.somers@noaa.gov). For permits 
+          please contact wcr.gfresearchpermits@noaa.gov.
         </div>
       </q-toolbar>
     </q-footer>
 
     <q-page-container>
-      <router-view />
+      <router-view ref="child"/>
     </q-page-container>
   </q-layout>
 </template>

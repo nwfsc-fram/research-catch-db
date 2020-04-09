@@ -13,6 +13,7 @@
         :filter="filter"
         @selection="newSelection"
         :pagination.sync="pagination"
+        summary="This table lists the permit numbers and information associated with permit." 
       >
         <template v-slot:top>
           <q-btn
@@ -60,7 +61,7 @@
           </q-dialog>
           <q-space />
           <q-input rounded outlined dense debounce="300" color="primary" v-model="filter">
-            <template v-slot:append>
+            <template v-slot:prepend>
               <q-icon name="search" />
             </template>
           </q-input>
@@ -149,6 +150,7 @@ export default class Permits extends Vue {
         align: 'center',
         label: 'Permit Numbers',
         field: 'permit_number',
+        headers: 'permit_number',
         sortable: true
       },
       {
@@ -180,6 +182,7 @@ export default class Permits extends Vue {
         name: 'startDate',
         label: 'Start Date',
         field: 'start_date',
+        sortable: true,
         format: val => date.formatDate(val, 'YYYY-MM-DD')
       },
       {

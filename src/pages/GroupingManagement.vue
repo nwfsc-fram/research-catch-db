@@ -1,5 +1,77 @@
 <template>
   <div>
+  <q-layout view="lHh Lpr lFf">
+    <q-header elevated>
+      <q-toolbar>
+        <q-btn
+          flat
+          dense
+          round
+          @click="leftDrawerOpen = !leftDrawerOpen"
+          icon="menu"
+          aria-label="Menu"
+        />
+
+        <q-toolbar-title>Research Catch App</q-toolbar-title>
+
+        <div>Quasar v{{ $q.version }}</div>
+      </q-toolbar>
+    </q-header>
+
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered content-class="bg-grey-2">
+      <q-list>
+        <q-item to="/login">
+          <q-item-section avatar>
+            <q-icon name="meeting_room" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Login</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/permits" exact>
+          <q-item-section avatar>
+            <q-icon name="directions_boat" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Permits</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/grouping-management" v-if="isAuthorized(['research-catch-staff'])">
+          <q-item-section avatar>
+            <q-icon name="developer_board" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Manage Groupings</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/reports" v-if="isAuthorized(['research-catch-staff'])">
+          <q-item-section avatar>
+            <q-icon name="assignment" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Reports</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-drawer>
+
+    <q-footer elevated>
+      <q-toolbar>
+        <q-space />
+        <div class="justify-around">
+          For questions or bug reports related to the functioning of the Research
+          Catch App, please contact nmfs.nwfsc.fram.data.team@noaa.gov. For questions
+          about the scientific, catch, or permit content of the Research Cath App
+          please contact Kate Richerson (kate.e.richerson@noaa.gov) or
+          Kayleigh Somers (kayleigh.somers@noaa.gov)
+        </div>
+      </q-toolbar>
+    </q-footer>
+
+    <q-page-container>
+      
+    
+
     <br />
     <div class="q-gutter-md row no-wrap justify-center">
       <q-select
@@ -137,6 +209,7 @@
     <br />
     <div class="q-gutter-md row justify-center">
       <q-btn color="positive" label="Save" :disable="!this.editedBool" @click="saveCheck" />
+      <a href="https://www.fisheries.noaa.gov/privacy-policy" target="_blank">Privacy Policy</a>
     </div>
 
     <q-dialog v-model="removeDialog1" persistent>
@@ -188,6 +261,23 @@
       </q-card>
     </q-dialog>
 
+    <q-dialog v-model="leavePageDialog" persistent>
+      <q-card>
+        <q-card-section class="row items-center">
+          <q-icon name="warning" color="primary" size="56px" />
+          <span class="q-ml-sm">
+            Changes to current groupings have not been saved, do 
+            you really want to leave this page?
+          </span>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Yes" color="primary" @click="leavePage" v-close-popup />
+          <q-btn flat label="No" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <q-dialog v-model="saveDialog" persistent>
       <q-card>
         <q-card-section class="row items-center">
@@ -206,6 +296,10 @@
     </q-dialog>
 
     <div>{{ catchUsing }}</div>
+
+    </q-page-container>
+  </q-layout>
+
   </div>
 </template>
 
@@ -250,6 +344,9 @@ export default class GroupingManagement extends Vue {
   removeDialog1: boolean = false;
   removeDialog2: boolean = false;
 
+  storeToRoute = {path: ''};
+  leavePageDialog: boolean = false;
+
   temp: object[] = [];
 
   pagination = {
@@ -286,7 +383,7 @@ export default class GroupingManagement extends Vue {
     },
     {
       name: 'northboundary',
-      label: 'North Bondary',
+      label: 'North Boundary',
       field: 'north_boundary',
       sortable: true
     }
@@ -632,13 +729,39 @@ export default class GroupingManagement extends Vue {
     }
   }
 
+  leftDrawerOpen = false;
+
+  private isAuthorized(authorizedRoles: string[]) {
+    for (const role of authorizedRoles) {
+      if (authService.getCurrentUser()!.roles.includes(role)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // beforeRouteLeave (to, from, next) {
+  //   console.log('at least im triggering')
+  //   const answer = window.confirm('Do you really want to leave? you have unsaved changes!');
+  //   if (answer) {
+  //     next();
+  //   } else {
+  //     next(false);
+  //   }
+  // }
+
+  leavePage() {
+    this.editedBool = false;
+    this.$router.push(this.storeToRoute.path);
+  }
+
   beforeRouteLeave (to, from, next) {
-    console.log('at least im triggering')
-    const answer = window.confirm('Do you really want to leave? you have unsaved changes!');
-    if (answer) {
+    if (!this.editedBool) {
       next();
     } else {
       next(false);
+      this.leavePageDialog = true;
+      this.storeToRoute = to;
     }
   }
 

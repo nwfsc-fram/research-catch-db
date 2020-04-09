@@ -22,7 +22,7 @@
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel name="permitDetails" class="bg-indigo-4" style="max-width: 600px">
               <div ref="section">
-                <div>Permit App point of contact</div>
+                <div>Point of contact for data submission</div>
                 <q-field outlined label="Point of Contact" stack-label square class="bg-indigo-1">
                   <template v-slot:control>
                     <div class="self-center full-width no-outline" tabindex="0">{{ pointOfContact }}</div>
@@ -223,8 +223,11 @@
         </q-card>
       </q-dialog>
 
-      <q-btn color="primary" class="justify-center" v-if="!isNew" @click="updatePermitInfo">Save</q-btn>
-      <q-btn color="primary" class="justify-center" v-if="isNew" type="submit">Save</q-btn>
+      <div class="row justify-center q-gutter-md">
+        <q-btn color="primary" v-if="!isNew" @click="updatePermitInfo">Save</q-btn>
+        <q-btn color="primary" v-if="isNew" type="submit">Save</q-btn>
+        <a href="https://www.fisheries.noaa.gov/privacy-policy" target="_blank">Privacy Policy</a>
+      </div>
       <br />
       <br />
       <q-card class="bg-green" v-if="saveSuccesfulBlock">
