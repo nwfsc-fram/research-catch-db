@@ -31,7 +31,7 @@ import axios from 'axios';
 import { authService } from '@boatnet/bn-auth/lib';
 
 @Component
-export default class Reports extends Vue {
+export default class Home extends Vue {
   authConfig: object = {};
 
   mounted() {

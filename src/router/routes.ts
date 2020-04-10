@@ -6,6 +6,7 @@ import PermitDetailsUser from '../pages/PermitDetailsUser.vue';
 import PermitDetailsStaff from '../pages/PermitDetailsStaff.vue';
 import GroupingManagement from '../pages/GroupingManagement.vue';
 import Reports from '../pages/Reports.vue';
+import PermitUpload from '../pages/PermitUpload.vue';
 import { authService } from '@boatnet/bn-auth/lib';
 
 function isAuthorized(authorizedRoles: string[]) {
@@ -49,6 +50,11 @@ const routes: RouteConfig[] = [
         }
       },
       { path: '/reports', name: 'Reports', component: Reports,
+        beforeEnter: (to, from, next) => {
+          if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/login'); }
+        }
+      },
+      { path: '/permitupload', name: 'PermitUpload', component: PermitUpload,
         beforeEnter: (to, from, next) => {
           if (isAuthorized(['research-catch-staff'])) { return next(); } else { return next('/login'); }
         }

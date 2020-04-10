@@ -30,7 +30,7 @@
                 </q-field>
                 <q-field square outlined label="Email Address" stack-label class="bg-indigo-1">
                   <template v-slot:control>
-                    <div class="full-width no-outline">{{ email }}</div>
+                    <div class="full-width no-outline">{{ pointOfContact }}</div>
                   </template>
                 </q-field>
               </div>
@@ -261,8 +261,6 @@ interface TableRow {
 
 @Component
 export default class Permits extends Vue {
-  pointOfContact = 'Seric Ogaz';
-  email = 'trogdor@noaa.gov';
   permit_info = {
     newOrganization: null
   };
@@ -350,7 +348,6 @@ export default class Permits extends Vue {
     }
 
     // TODO: this is still "editing" the vuex store, fix that
-    uploadObject['point_of_contact'] = 0;
     uploadObject['data_status_id'] = 2;
 
     axios
@@ -428,6 +425,12 @@ export default class Permits extends Vue {
   }
   set projectId(value) {
     this.$store.commit('sPermit/updateProjectId', value);
+  }
+  get pointOfContact() {
+    return this.$store.state.sPermit.permit.point_of_contact;
+  }
+  set pointOfContact(value) {
+    this.$store.commit('sPermit/updatePOC', value);
   }
   get permitNumber() {
     return this.$store.state.sPermit.permit.permit_number;

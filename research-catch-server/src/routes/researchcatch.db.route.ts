@@ -145,7 +145,15 @@ async function getOrgId(orgName: string) {
   try {
     output = await pool.query('SELECT organization_id FROM "ORGANIZATION_LU" WHERE name =$1', 
       [orgName]);
-    return output.rows[0];
+    if (output.rows.length > 0) {
+      return output.rows[0];
+    } else {
+      // make new entry if it doesn't exist
+      let newId = await getMaxOrgId() + 1;
+      await pool.query('INSERT INTO "ORGANIZATION_LU" VALUES ($1, $2)',
+        [newId, orgName]);
+      return {'organization_id': newId};
+    }
   } catch (err) {
     console.log(err.stack);
   }
@@ -230,7 +238,6 @@ export async function addPermit(request: Request, response: Response) {
 
   // Translate values to Ids
   let orgReturn = null;
-  let userReturn = null;
   if (result.organizationName) {
     try {
       orgReturn = await getOrgId(result.organizationName);
@@ -243,29 +250,17 @@ export async function addPermit(request: Request, response: Response) {
       return;
     }
   }
-  if (result.email) {
-    try {
-      userReturn = await getUserId(result.email);
-      result.pointOfContact = userReturn['user_id'];
-    } catch (err) {
-      response.status(400).json({
-        status: 400,
-        message: 'Could not find user_id in database: ' + err.stack
-      })
-      return;
-    }
-  }
 
   try{
     const qresult = await pool.query('INSERT INTO "RESEARCH_PROJECT" (research_project_id, '
       + 'permit_number, organization_id, project_name, permit_year, start_date, ' 
-      + 'end_date, mortality_credits_applicable, point_of_contact, data_status_id, '
-      + 'issued_by, principle_investigator, notes, staff_notes) '
+      + 'end_date, mortality_credits_applicable, data_status_id, '
+      + 'issued_by, principle_investigator, pi_email, notes, staff_notes) '
       + 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)',
       [researchProjectId, result.permitNumber, result.organizationId, result.projectName,
         result.permitYear, result.startDate, result.endDate, result.mortalityCreditsApplicable,
-        result.pointOfContact, result.dataStatus, result.issuedBy, result.principleInvestigator,
-        result.notes, result.staffNotes]) 
+        result.dataStatus, result.issuedBy, result.principleInvestigator,
+        result.email, result.notes, result.staffNotes]) 
         response.status(200).send(`Permit row added ${qresult.rows[0]}`)
       } catch (err) {
           response.status(400).json({

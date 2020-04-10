@@ -924,10 +924,9 @@ components:
           type: string
         mortality_credits_applicable:
           type: boolean
-        point_of_contact:
-          type: string
         email:
           type: string
+          description: email of PI
         data_status_id:
           type: number
         issued_by:
