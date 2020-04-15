@@ -40,7 +40,7 @@ export default class Reports extends Vue {
       .get('rcat/api/v1/groupmanage', this.authConfig)
       .then(response => (this.yearList = response.data.map(a => a.year)))
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
   }
 }

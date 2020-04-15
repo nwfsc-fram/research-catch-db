@@ -27,7 +27,6 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import axios from 'axios';
 import { authService } from '@boatnet/bn-auth/lib';
 
 @Component

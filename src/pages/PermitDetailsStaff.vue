@@ -359,7 +359,7 @@ export default class Permits extends Vue {
         this.saveModel = true;
       })
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
         this.errorMessage = 'could not save new permit to database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
@@ -387,7 +387,7 @@ export default class Permits extends Vue {
       })
       // TODO: How do I catch a 401 response here?
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
         this.errorMessage = 'could not update permit informartion in database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
@@ -514,7 +514,7 @@ export default class Permits extends Vue {
       .get('rcat/api/v1/orgnames', this.authConfig)
       .then(response => (this.temp = response.data))
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
     this.originalPermitNum = this.$store.state.sPermit.permit.permit_number;
     if (!this.isNew) {
@@ -525,7 +525,7 @@ export default class Permits extends Vue {
         )
         .then(response => (this.data = response.data))
         .catch(error => {
-          console.log(error.response);
+          console.log(error.response.data.message);
         });
     }
   }

@@ -135,6 +135,43 @@ paths:
               example:
                 status: 400
                 message: 'Could not delete permit'
+  /permitsyearly:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Permits
+      summary: Insert new permits for the year into permit table
+      operationId: postPermitsYearly
+      requestBody:
+        description: Requires all expected permit fields
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPermitYear'
+        required: true
+      responses:
+        '200':
+          description: 'New permits added'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not add new permits to database'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not add new permits to database.'
 
   /groupmanage:
     post:
@@ -937,6 +974,59 @@ components:
           type: string
         staffNotes:
           type: string
+    NewPermitYear:
+      type: object
+      required:
+        - upload_data
+      properties:
+        upload_data:
+          type: array
+          items:
+            type: object
+            required:
+              - permit_number
+              - issued_by
+              - principle_investigator
+              - email
+              - organization_name
+              - project_name
+              - permit_year
+              - data_status_id
+              - start_date
+              - end_date
+            properties:
+              permit_number:
+                type: string
+              issued_by:
+                type: string
+              principle_investigator:
+                type: string
+              email:
+                type: string
+                description: email of PI
+              organization_name:
+                type: string
+              project_name:
+                type: string
+              permit_year:
+                type: number
+              data_status_id:
+                type: number
+              start_date:
+                type: string
+              end_date:
+                type: string
+          example:
+            [{permit_number: "SRP-02-2040", 
+              issued_by: "Lynn Massey", 
+              principle_investigator: "Seagull Wellington", 
+              email: "seagull.wellington@noaa.gov", 
+              organization_name: "NWFSC", 
+              project_name: "Coastwide Prerecruit Survey of the Northern Seagull Population", 
+              permit_year: 1999, 
+              data_status_id: 2, 
+              start_date: "Fri May 10 2019", 
+              end_date: "Mon Jun 10 2019"}]
     SpeciesGroupingData:
       type: object
       required:

@@ -374,6 +374,78 @@ export async function deletePermit(request: Request, response: Response) {
   }
 }
 
+/* 
+Add permits for the year, other add permit function only adds 
+one permit at a time
+*/
+export async function addPermitYearly(request: Request, response: Response) {
+  // Beginning of sql string
+  let sqlString = `INSERT INTO "RESEARCH_PROJECT" (research_project_id, 
+    permit_number, issued_by, principle_investigator, pi_email, organization_id, 
+    project_name, permit_year, data_status_id, start_date, end_date) VALUES `
+
+  // Get max id to start counter
+  let researchId = undefined;
+  try {
+    let maxReturn = await getMaxResearchId();
+    researchId = Number(maxReturn['max']);
+  } catch(err) {
+    response.status(400).json({
+      status: 400,
+      message: 'Could not find max research_project_id in database: ' + err.stack
+    });
+    return;
+  }
+
+  // Get next unused research_project_id
+  for (let permitRow of request.body.upload_data) {
+    // Increase id counter and add to sql string
+    researchId += 1;
+    sqlString = sqlString.concat('(\'' + String(researchId) + '\', ');
+
+    // permit number, issued by, PI, and email
+    sqlString = sqlString.concat(
+      '\'', permitRow.permit_number, '\', ',
+      '\'', permitRow.issued_by, '\', ', 
+      '\'', permitRow.principle_investigator, '\', ',
+      '\'', permitRow.email, '\', '
+      );
+
+    // organization id
+    try {
+      let orgReturn = await getOrgId(permitRow.organization_name);
+      sqlString = sqlString.concat(String(orgReturn['organization_id']), ', ');
+    } catch (err) {
+      response.status(400).json({
+        status: 401,
+        message: 'Could not find find organization_id in database: ' + err.stack
+      })
+    }
+
+    // project_name, permit_year, data_status_id, start_date, end_date
+    sqlString = sqlString.concat(
+      '\'', permitRow.project_name, '\', ',
+      String(permitRow.permit_year), ', ', 
+      String(permitRow.data_status_id), ', ',
+      '\'', permitRow.start_date, '\', ',
+      '\'', permitRow.end_date, '\'),'
+      );
+  }
+
+  sqlString = sqlString.slice(0, -1);
+
+  try {
+    const qresult = await pool.query(sqlString);
+    response.status(200).send('New permits added');
+  } catch (err) {
+    console.error(err.stack);
+      response.status(400).json({
+        status: 400,
+        message: 'Could not add permit data to database: ' + err.stack
+      });
+  }
+}
+
 /*
 This function can be used to add a new permit entry to
 the RESEARCH_PROJECT table. Does not require all fields
@@ -415,7 +487,7 @@ export async function addCatchData(request: Request, response: Response) {
     response.status(400).json({
       status: 400,
       message: 'Could not find max catch_id in database: ' + err.stack
-    })
+    });
     return;
   }
 
@@ -777,7 +849,6 @@ export async function addSpeciesGrouping(request: Request, response: Response) {
   }
 
   newValuesString = newValuesString.slice(0, -1);
-  console.log(newValuesString);
 
   try {
     await pool.query(`INSERT INTO "GROUPING_SPECIES" (grouping_id, species_id, year, 

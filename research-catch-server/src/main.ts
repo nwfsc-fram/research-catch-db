@@ -32,6 +32,7 @@ import {
   getCatchSGIds,
   updatePermit,
   deletePermit,
+  addPermitYearly,
   addNewYearGrouping,
   getGroupYears,
   deleteGroupingSpecies,
@@ -86,6 +87,9 @@ app.use('/rcat/api/' + API_VERSION + '/permits', validateJwtRequest); // validat
 app.route('/rcat/api/' + API_VERSION + '/permits').post(addPermit);
 app.route('/rcat/api/' + API_VERSION + '/permits').put(updatePermit);
 app.route('/rcat/api/' + API_VERSION + '/permits/:permitnum').delete(deletePermit);
+
+app.use('/rcat/api/' + API_VERSION + '/permitsyearly', validateJwtRequest); // validate first
+app.route('/rcat/api/' + API_VERSION + '/permitsyearly').post(addPermitYearly);
 
 app.use('/rcat/api/' + API_VERSION + '/catch', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/catch').post(addCatchData);

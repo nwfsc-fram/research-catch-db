@@ -398,7 +398,7 @@ export default class Permits extends Vue {
         this.saveFailedBlock = false;
       })
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
         this.errorMessage = 'could not update permit informartion in database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
@@ -477,9 +477,9 @@ export default class Permits extends Vue {
         'rcat/api/v1/catch/' + this.permit.research_project_id,
         this.authConfig
       )
-      .then(response => console.log(response))
+      .then(response => console.log(response.data.message))
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
 
     const checkResult = this.checkCatch();
@@ -510,7 +510,7 @@ export default class Permits extends Vue {
         })
         // TODO: How do I catch a 401 response here?
         .catch(error => {
-          console.log(error.response);
+          console.log(error.response.data.message);
           this.errorMessage = 'could not save catch data to database';
           this.saveFailedBlock = true;
           this.saveSuccesfulBlock = false;
@@ -656,7 +656,7 @@ export default class Permits extends Vue {
           (this.groupingList = response.data.map(a => a.grouping_name))
       )
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
     axios
       .get('rcat/api/v1/species/' + this.permit['permit_year'], this.authConfig)
@@ -665,7 +665,7 @@ export default class Permits extends Vue {
           (this.speciesList = response.data.map(a => a.common_name).sort())
       )
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
     axios
       .get('rcat/api/v1/depthgroupings', this.authConfig)
@@ -676,7 +676,7 @@ export default class Permits extends Vue {
           ))
       )
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
     axios
       .get('rcat/api/v1/speciesgrouping/' + this.permit['permit_year'], this.authConfig)
@@ -692,7 +692,7 @@ export default class Permits extends Vue {
           }
       })
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
   }
 }
