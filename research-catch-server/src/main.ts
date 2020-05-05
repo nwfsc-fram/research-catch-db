@@ -39,7 +39,10 @@ import {
   deleteGroupSet,
   updateSpeciesGrouping,
   updateGrouping,
-  addSpeciesGrouping
+  addSpeciesGrouping,
+  getReport1,
+  getReport2Pnums,
+  getReport3
 } from './routes/researchcatch.db.route';
 
 const app: Application = express();
@@ -122,6 +125,11 @@ app.use('/rcat/api/' + API_VERSION + '/speciesgrouping', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/speciesgrouping').post(addSpeciesGrouping);
 app.route('/rcat/api/' + API_VERSION + '/speciesgrouping').put(updateSpeciesGrouping);
 app.route('/rcat/api/' + API_VERSION + '/speciesgrouping/:year').get(getSpeciesGrouping);
+
+app.use('/rcat/api/' + API_VERSION + '/reports', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/reports/report1/:yearstart/:yearend').get(getReport1);
+app.route('/rcat/api/' + API_VERSION + '/reports/report2permits/:yearstart/:yearend').get(getReport2Pnums);
+app.route('/rcat/api/' + API_VERSION + '/reports/report3/:yearstart/:yearend').get(getReport3);
 
 app.use('/rcat/api/' + API_VERSION + '/depthgroupings', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/depthgroupings').get(getDepthGroupings);

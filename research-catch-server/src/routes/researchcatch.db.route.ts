@@ -941,7 +941,9 @@ export async function updateSpeciesGrouping(request: Request, response: Response
 // Need to fetch grouping species combos
 export async function getSpeciesGrouping(request: Request, response: Response) {
   try {
-    let results = await pool.query('SELECT grouping_species_id, grouping_name, common_name, south_boundary, north_boundary FROM research_catch."GROUPING_SPECIES_VIEW" WHERE "year"=$1',
+    let results = await pool.query(`SELECT grouping_species_id, grouping_name, common_name, 
+                                    south_boundary, north_boundary 
+                                    FROM research_catch."GROUPING_SPECIES_VIEW" WHERE "year"=$1`,
     [request.params.year]);
     response.status(200).json(results.rows);
   } catch (err) {
@@ -949,6 +951,58 @@ export async function getSpeciesGrouping(request: Request, response: Response) {
     response.status(400).json({
       status: 400,
       message: 'Could not retrieve groupings/species from database: ' + err.stack
+    });
+  }
+}
+
+// Get Report 1 between provided years
+export async function getReport1(request: Request, response: Response) {
+  try {
+    let results = await pool.query(`SELECT * FROM "REPORT1_VIEW"
+                                    WHERE permit_year > ($1 - 1)
+                                    AND permit_year < ($2 + 1)`, 
+    [request.params.yearstart, request.params.yearend]);
+    response.status(200).json(results.rows);
+  } catch(err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve report1 data from database: ' + err.stack
+    });
+  }
+}
+
+// Get Report 2 list of permit numbers
+export async function getReport2Pnums(request: Request, response: Response){
+  try {
+    let results = await pool.query(`SELECT DISTINCT permit_number, permit_year FROM "REPORT1_VIEW"
+                                    WHERE permit_year > ($1 - 1)
+                                    AND permit_year < ($2 + 1)
+                                    ORDER BY permit_year`, 
+    [request.params.yearstart, request.params.yearend]);
+    response.status(200).json(results.rows);
+  } catch(err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve report1 data from database: ' + err.stack
+    });
+  }
+}
+
+// Get Report 3 between provided years
+export async function getReport3(request: Request, response: Response) {
+  try {
+    let results = await pool.query(`SELECT * FROM "REPORTWCR_VIEW"
+                                    WHERE permit_year > ($1 - 1)
+                                    AND permit_year < ($2 + 1)`, 
+    [request.params.yearstart, request.params.yearend]);
+    response.status(200).json(results.rows);
+  } catch(err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve report1 data from database: ' + err.stack
     });
   }
 }

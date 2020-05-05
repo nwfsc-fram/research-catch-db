@@ -12,6 +12,8 @@ tags:
     description: Catch Data Management
   - name: Grouping Management
     description: Managing Groupings per Year
+  - name: Reports
+    description: Fetch Data for Catch Reports
   - name: Info Pull
     description: Various DB reads
 
@@ -779,6 +781,151 @@ paths:
                 status: 400
                 message: 'Could not update species grouping table'
 
+  /reports/report1/{yearstart}/{yearend}:
+    parameters:
+      - in: path
+        name: yearstart
+        description: start year for report
+        required: true
+        schema:
+          type: integer
+        example: 2019
+      - in: path
+        name: yearend
+        description: end year for report
+        required: true
+        schema:
+          type: integer
+        example: 2020
+    get:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Reports
+      summary: retrieve rows from report 1 view
+      operationId: getReport1
+      responses:
+        '200':
+          description: 'Retrieved report 1 data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report1Data'
+        '400':
+          description: 'Could not retrieve report 1'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve report 1 data from database'
+
+  /reports/report2permits/{yearstart}/{yearend}:
+    parameters:
+      - in: path
+        name: yearstart
+        description: start year for report
+        required: true
+        schema:
+          type: integer
+        example: 2019
+      - in: path
+        name: yearend
+        description: end year for report
+        required: true
+        schema:
+          type: integer
+        example: 2020
+    get:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Reports
+      summary: retrieve ordered list of permit numbers
+      operationId: getReport2
+      responses:
+        '200':
+          description: 'Retrieved report 2 permit numbers'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    permit_number:
+                      type: string
+                    permit_year:
+                      type: integer
+        '400':
+          description: 'Could not get report 2 permit numbers'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve report 2 permit numbers'
+                
+  /reports/report3/{yearstart}/{yearend}:
+    parameters:
+      - in: path
+        name: yearstart
+        description: start year for report
+        required: true
+        schema:
+          type: integer
+        example: 2019
+      - in: path
+        name: yearend
+        description: end year for report
+        required: true
+        schema:
+          type: integer
+        example: 2020
+    get:
+      security:
+        - bearerAuth: []
+      tags: 
+        - Reports
+      summary: retrieve rows from report 3 view
+      operationId: getReport3
+      responses:
+        '200':
+          description: 'Retrieved report 3 data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportWCRData'
+        '400':
+          description: 'Could not report 3'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve report 3 data from database'
+
   /speciesgrouping/{year}:
     parameters:
       - in: path
@@ -1104,26 +1251,81 @@ components:
           example:
             [{grouping_name: "English sole"},
              {grouping_name: "Groundfish unid"}]
+    Report1Data:
+      type: array
+      items:
+        type: object
+        properties:
+          permit_number:
+            type: string
+          permit_year:
+            type: integer
+          grouping_name:
+            type: string
+          common_name:
+            type: string
+          total_catch_mt:
+            type: number
+            format: float
+          min_depth_ftm:
+            type: integer
+          max_depth_ftm:
+            type: integer
+          percent_released_at_depth:
+            type: number
+            format: float
+          delivery_date:
+            type: string
+          mortality_estimate:
+            type: number
+            format: float
+    ReportWCRData:
+      type: array
+      items:
+        type: object
+        properties:
+          permit_number:
+            type: string
+          permit_year:
+            type: integer
+          org_name:
+            type: string
+          project_name:
+            type: string
+          principle_investigator:
+            type: string
+          pi_email:
+            type: string
+          start_date:
+            type: string
+          end_date:
+            type: string
+          delivery_status:
+            type: string
+          delivery_date:
+            type: string     
     CatchData:
-      type: object
-      properties:
-        catch_id:
-          type: integer
-        grouping_name:
-          type: string
-        common_name:
-          type: string
-        total_catch_mt:
-          type: number
-          format: float
-        depth_bin:
-          type: string
-        percent_released_at_depth:
-          type: string
-        notes:
-          type: string
-        research_project_id:
-          type: integer
+      type: array
+      items:
+        type: object
+        properties:
+          catch_id:
+            type: integer
+          grouping_name:
+            type: string
+          common_name:
+            type: string
+          total_catch_mt:
+            type: number
+            format: float
+          depth_bin:
+            type: string
+          percent_released_at_depth:
+            type: string
+          notes:
+            type: string
+          research_project_id:
+            type: integer
     PermitsData:
       type: object
       properties:
