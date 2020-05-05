@@ -29,15 +29,20 @@ import {
   addCatchData,
   getCatchData,
   deleteCatchData,
+  getCatchSGIds,
   updatePermit,
   deletePermit,
+  addPermitYearly,
   addNewYearGrouping,
   getGroupYears,
   deleteGroupingSpecies,
   deleteGroupSet,
   updateSpeciesGrouping,
   updateGrouping,
-  addSpeciesGrouping
+  addSpeciesGrouping,
+  getReport1,
+  getReport2Pnums,
+  getReport3
 } from './routes/researchcatch.db.route';
 
 const app: Application = express();
@@ -86,10 +91,16 @@ app.route('/rcat/api/' + API_VERSION + '/permits').post(addPermit);
 app.route('/rcat/api/' + API_VERSION + '/permits').put(updatePermit);
 app.route('/rcat/api/' + API_VERSION + '/permits/:permitnum').delete(deletePermit);
 
+app.use('/rcat/api/' + API_VERSION + '/permitsyearly', validateJwtRequest); // validate first
+app.route('/rcat/api/' + API_VERSION + '/permitsyearly').post(addPermitYearly);
+
 app.use('/rcat/api/' + API_VERSION + '/catch', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/catch').post(addCatchData);
 app.route('/rcat/api/' + API_VERSION + '/catch/:pid').get(getCatchData);
 app.route('/rcat/api/' + API_VERSION + '/catch/:pid').delete(deleteCatchData);
+
+app.use('/rcat/api/' + API_VERSION + '/catchgs', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/catchgs').get(getCatchSGIds);
 
 app.use('/rcat/api/' + API_VERSION + '/groupmanage', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/groupmanage').post(addNewYearGrouping);
@@ -114,6 +125,11 @@ app.use('/rcat/api/' + API_VERSION + '/speciesgrouping', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/speciesgrouping').post(addSpeciesGrouping);
 app.route('/rcat/api/' + API_VERSION + '/speciesgrouping').put(updateSpeciesGrouping);
 app.route('/rcat/api/' + API_VERSION + '/speciesgrouping/:year').get(getSpeciesGrouping);
+
+app.use('/rcat/api/' + API_VERSION + '/reports', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/reports/report1/:yearstart/:yearend').get(getReport1);
+app.route('/rcat/api/' + API_VERSION + '/reports/report2permits/:yearstart/:yearend').get(getReport2Pnums);
+app.route('/rcat/api/' + API_VERSION + '/reports/report3/:yearstart/:yearend').get(getReport3);
 
 app.use('/rcat/api/' + API_VERSION + '/depthgroupings', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/depthgroupings').get(getDepthGroupings);

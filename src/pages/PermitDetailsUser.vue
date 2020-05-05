@@ -21,15 +21,10 @@
         <q-tab-panels v-model="tab" animated>
           <q-tab-panel name="permitDetails" class="bg-indigo-4" style="max-width: 600px">
             <div>
-              <div>Assigning point of contact to data submission:</div>
-              <q-field outlined label="Point of Contact" stack-label square class="bg-indigo-1">
+              <div>Catch Data Submitted?</div>
+              <q-field outlined square class="bg-indigo-1">
                 <template v-slot:control>
-                  <div class="self-center full-width no-outline" tabindex="0">{{ pointOfContact }}</div>
-                </template>
-              </q-field>
-              <q-field square outlined label="Email Address" stack-label class="bg-indigo-1">
-                <template v-slot:control>
-                  <div class="full-width no-outline">{{ email }}</div>
+                  <div class="self-center full-width no-outline" tabindex="0">{{ pointOfContact.length > 1 ? 'Yes' : 'No' }}</div>
                 </template>
               </q-field>
             </div>
@@ -155,7 +150,7 @@
                   <q-td
                     key="grouping"
                     :props="props"
-                    :style="groupingSpeciesList.includes(props.row.grouping.concat(props.row.species)) ? '' : `color:red;`"
+                    :style="groupingSpeciesList.includes(props.row.grouping.concat(props.row.species)) ? '' : `color:red; font-weight:bold;`"
                   >
                     {{ props.row.grouping }}
                     <q-popup-edit v-model="props.row.grouping" buttons>
@@ -168,7 +163,7 @@
                   <q-td
                     key="species"
                     :props="props"
-                    :style="groupingSpeciesList.includes(props.row.grouping.concat(props.row.species)) ? '' : `color:red;`"
+                    :style="groupingSpeciesList.includes(props.row.grouping.concat(props.row.species)) ? '' : `color:red; font-weight:bold;`"
                   >
                     {{ props.row.species }}
                     <q-popup-edit v-model="props.row.species" buttons>
@@ -212,7 +207,7 @@
               </template>
             </q-table>
             <br />
-            <div class="row">
+            <div class="row justify-center q-gutter-md">
               <q-btn color="primary" v-if="addRowButton" label="Add Row" @click="addRow" />
               <q-btn
                 color="positive"
@@ -220,6 +215,7 @@
                 @click="submitCatch"
                 :disable="data.length < 1"
               />
+              <a href="https://www.fisheries.noaa.gov/privacy-policy" target="_blank">Privacy Policy</a>
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -257,7 +253,10 @@
               </p>
             </q-card>
             <br />
-            <q-btn color="primary" class="justify-center" @click="updatePermitInfo">Save</q-btn>
+            <div class="row justify-center q-gutter-md">
+              <q-btn color="primary" class="justify-center" @click="updatePermitInfo">Save</q-btn>
+              <a href="https://www.fisheries.noaa.gov/privacy-policy" target="_blank">Privacy Policy</a>
+            </div>
           </q-tab-panel>
         </q-tab-panels>
       </q-card>
@@ -318,8 +317,6 @@ interface TableRow {
 export default class Permits extends Vue {
   // to-do: poc and email will need to be hooked up to
   // login acccount
-  pointOfContact = 'Seric Ogaz';
-  email = 'trogdor@noaa.gov';
   dataURL = null;
   excelFile = null;
   tableLoading = false;
@@ -401,7 +398,7 @@ export default class Permits extends Vue {
         this.saveFailedBlock = false;
       })
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
         this.errorMessage = 'could not update permit informartion in database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
@@ -474,14 +471,15 @@ export default class Permits extends Vue {
   submitCatch() {
     // first delete any previously submitted data
     // to-do, should be passing id as part of the url for a delete
+
     axios
       .delete(
         'rcat/api/v1/catch/' + this.permit.research_project_id,
         this.authConfig
       )
-      .then(response => console.log(response))
+      .then(response => console.log(response.data.message))
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
 
     const checkResult = this.checkCatch();
@@ -497,6 +495,7 @@ export default class Permits extends Vue {
     if (this.data.length > 0) {
       let axiosData = {
         research_project_id: this.permit['research_project_id'], // eslint-disable-line
+        point_of_contact: authService.getCurrentUser()!.username,
         year: this.permit['permit_year'],
         catch_data: this.data // eslint-disable-line
       };
@@ -511,7 +510,7 @@ export default class Permits extends Vue {
         })
         // TODO: How do I catch a 401 response here?
         .catch(error => {
-          console.log(error.response);
+          console.log(error.response.data.message);
           this.errorMessage = 'could not save catch data to database';
           this.saveFailedBlock = true;
           this.saveSuccesfulBlock = false;
@@ -623,6 +622,14 @@ export default class Permits extends Vue {
     this.$store.commit('sPermit/updateNotes', value);
   }
 
+  get pointOfContact() {
+    return this.$store.state.sPermit.permit.point_of_contact;
+  }
+
+  set pointOfContact(value) {
+    this.$store.commit('sPermit/updatePOC', value);
+  }
+
   get permitMortality() {
     return this.$store.state.sPermit.permit.mortality_credits_applicable;
   }
@@ -649,7 +656,7 @@ export default class Permits extends Vue {
           (this.groupingList = response.data.map(a => a.grouping_name))
       )
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
     axios
       .get('rcat/api/v1/species/' + this.permit['permit_year'], this.authConfig)
@@ -658,7 +665,7 @@ export default class Permits extends Vue {
           (this.speciesList = response.data.map(a => a.common_name).sort())
       )
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
     axios
       .get('rcat/api/v1/depthgroupings', this.authConfig)
@@ -669,7 +676,7 @@ export default class Permits extends Vue {
           ))
       )
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
     axios
       .get('rcat/api/v1/speciesgrouping/' + this.permit['permit_year'], this.authConfig)
@@ -685,7 +692,7 @@ export default class Permits extends Vue {
           }
       })
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
   }
 }

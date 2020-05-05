@@ -22,7 +22,7 @@
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel name="permitDetails" class="bg-indigo-4" style="max-width: 600px">
               <div ref="section">
-                <div>Permit App point of contact</div>
+                <div>Point of contact for data submission</div>
                 <q-field outlined label="Point of Contact" stack-label square class="bg-indigo-1">
                   <template v-slot:control>
                     <div class="self-center full-width no-outline" tabindex="0">{{ pointOfContact }}</div>
@@ -30,7 +30,7 @@
                 </q-field>
                 <q-field square outlined label="Email Address" stack-label class="bg-indigo-1">
                   <template v-slot:control>
-                    <div class="full-width no-outline">{{ email }}</div>
+                    <div class="full-width no-outline">{{ pointOfContact }}</div>
                   </template>
                 </q-field>
               </div>
@@ -223,8 +223,11 @@
         </q-card>
       </q-dialog>
 
-      <q-btn color="primary" class="justify-center" v-if="!isNew" @click="updatePermitInfo">Save</q-btn>
-      <q-btn color="primary" class="justify-center" v-if="isNew" type="submit">Save</q-btn>
+      <div class="row justify-center q-gutter-md">
+        <q-btn color="primary" v-if="!isNew" @click="updatePermitInfo">Save</q-btn>
+        <q-btn color="primary" v-if="isNew" type="submit">Save</q-btn>
+        <a href="https://www.fisheries.noaa.gov/privacy-policy" target="_blank">Privacy Policy</a>
+      </div>
       <br />
       <br />
       <q-card class="bg-green" v-if="saveSuccesfulBlock">
@@ -258,8 +261,6 @@ interface TableRow {
 
 @Component
 export default class Permits extends Vue {
-  pointOfContact = 'Seric Ogaz';
-  email = 'trogdor@noaa.gov';
   permit_info = {
     newOrganization: null
   };
@@ -347,7 +348,6 @@ export default class Permits extends Vue {
     }
 
     // TODO: this is still "editing" the vuex store, fix that
-    uploadObject['point_of_contact'] = 0;
     uploadObject['data_status_id'] = 2;
 
     axios
@@ -359,7 +359,7 @@ export default class Permits extends Vue {
         this.saveModel = true;
       })
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
         this.errorMessage = 'could not save new permit to database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
@@ -387,7 +387,7 @@ export default class Permits extends Vue {
       })
       // TODO: How do I catch a 401 response here?
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
         this.errorMessage = 'could not update permit informartion in database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
@@ -425,6 +425,12 @@ export default class Permits extends Vue {
   }
   set projectId(value) {
     this.$store.commit('sPermit/updateProjectId', value);
+  }
+  get pointOfContact() {
+    return this.$store.state.sPermit.permit.point_of_contact;
+  }
+  set pointOfContact(value) {
+    this.$store.commit('sPermit/updatePOC', value);
   }
   get permitNumber() {
     return this.$store.state.sPermit.permit.permit_number;
@@ -508,7 +514,7 @@ export default class Permits extends Vue {
       .get('rcat/api/v1/orgnames', this.authConfig)
       .then(response => (this.temp = response.data))
       .catch(error => {
-        console.log(error.response);
+        console.log(error.response.data.message);
       });
     this.originalPermitNum = this.$store.state.sPermit.permit.permit_number;
     if (!this.isNew) {
@@ -519,7 +525,7 @@ export default class Permits extends Vue {
         )
         .then(response => (this.data = response.data))
         .catch(error => {
-          console.log(error.response);
+          console.log(error.response.data.message);
         });
     }
   }

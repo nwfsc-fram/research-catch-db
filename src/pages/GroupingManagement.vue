@@ -1,5 +1,77 @@
 <template>
   <div>
+  <q-layout view="lHh Lpr lFf">
+    <q-header elevated>
+      <q-toolbar>
+        <q-btn
+          flat
+          dense
+          round
+          @click="leftDrawerOpen = !leftDrawerOpen"
+          icon="menu"
+          aria-label="Menu"
+        />
+
+        <q-toolbar-title>Research Catch App</q-toolbar-title>
+
+        <div>Quasar v{{ $q.version }}</div>
+      </q-toolbar>
+    </q-header>
+
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered content-class="bg-grey-2">
+      <q-list>
+        <q-item to="/login">
+          <q-item-section avatar>
+            <q-icon name="meeting_room" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Login</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/permits" exact>
+          <q-item-section avatar>
+            <q-icon name="directions_boat" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Permits</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/grouping-management" v-if="isAuthorized(['research-catch-staff'])">
+          <q-item-section avatar>
+            <q-icon name="developer_board" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Manage Groupings</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/reports" v-if="isAuthorized(['research-catch-staff'])">
+          <q-item-section avatar>
+            <q-icon name="assignment" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Reports</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-drawer>
+
+    <q-footer elevated>
+      <q-toolbar>
+        <q-space />
+        <div class="justify-around">
+          For questions or bug reports related to the functioning of the Research
+          Catch App, please contact nmfs.nwfsc.fram.data.team@noaa.gov. For questions
+          about the scientific, catch, or permit content of the Research Cath App
+          please contact Kate Richerson (kate.e.richerson@noaa.gov) or
+          Kayleigh Somers (kayleigh.somers@noaa.gov)
+        </div>
+      </q-toolbar>
+    </q-footer>
+
+    <q-page-container>
+      
+    
+
     <br />
     <div class="q-gutter-md row no-wrap justify-center">
       <q-select
@@ -136,7 +208,8 @@
     </div>
     <br />
     <div class="q-gutter-md row justify-center">
-      <q-btn color="positive" label="Save" :disable="!this.editedBool" @click="saveChanges" />
+      <q-btn color="positive" label="Save" :disable="!this.editedBool" @click="saveCheck" />
+      <a href="https://www.fisheries.noaa.gov/privacy-policy" target="_blank">Privacy Policy</a>
     </div>
 
     <q-dialog v-model="removeDialog1" persistent>
@@ -171,7 +244,7 @@
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="saveDialog" persistent>
+    <q-dialog v-model="notSavedDialog" persistent>
       <q-card>
         <q-card-section class="row items-center">
           <q-icon name="warning" color="primary" size="56px" />
@@ -188,7 +261,45 @@
       </q-card>
     </q-dialog>
 
-    <div>{{ temp }}</div>
+    <q-dialog v-model="leavePageDialog" persistent>
+      <q-card>
+        <q-card-section class="row items-center">
+          <q-icon name="warning" color="primary" size="56px" />
+          <span class="q-ml-sm">
+            Changes to current groupings have not been saved, do 
+            you really want to leave this page?
+          </span>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Yes" color="primary" @click="leavePage" v-close-popup />
+          <q-btn flat label="No" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="saveDialog" persistent>
+      <q-card>
+        <q-card-section class="row items-center">
+          <q-icon name="warning" color="primary" size="56px" />
+          <span class="q-ml-sm">
+            Changes made to grouping species rows that are currently
+            being used by catch data, continue with save?
+          </span>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Yes" color="primary" @click="saveChanges" v-close-popup />
+          <q-btn flat label="No" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <div>{{ catchUsing }}</div>
+
+    </q-page-container>
+  </q-layout>
+
   </div>
 </template>
 
@@ -222,14 +333,19 @@ export default class GroupingManagement extends Vue {
   yearModel = 2019;
   currentYear = 2019;
   yearList: number[] = [];
+  catchUsing: number[] = [];
   authConfig: object = {};
   selectedTab1: GroupingRow[] = [];
   selectedTab2: GroupingSpeciesRow[] = [];
   loading: boolean = false;
   editedBool: boolean = false;
+  notSavedDialog: boolean = false;
   saveDialog: boolean = false;
   removeDialog1: boolean = false;
   removeDialog2: boolean = false;
+
+  storeToRoute = {path: ''};
+  leavePageDialog: boolean = false;
 
   temp: object[] = [];
 
@@ -267,7 +383,7 @@ export default class GroupingManagement extends Vue {
     },
     {
       name: 'northboundary',
-      label: 'North Bondary',
+      label: 'North Boundary',
       field: 'north_boundary',
       sortable: true
     }
@@ -281,7 +397,7 @@ export default class GroupingManagement extends Vue {
     if (!this.editedBool) {
       this.yearChanged();
     } else {
-      this.saveDialog = true;
+      this.notSavedDialog = true;
     }
   }
 
@@ -319,10 +435,9 @@ export default class GroupingManagement extends Vue {
   async addNewYear() {
     // turn on spinny wheel
     this.loading = true;
+    let newYear = Math.max(...this.yearList) + 1;
 
     try {
-      let output = await axios.get('rcat/api/v1/groupmanage', this.authConfig);
-      let newYear: number = output.data[0]['max'] + 1;
       await axios.post(
         'rcat/api/v1/groupmanage',
         { year: newYear },
@@ -333,6 +448,8 @@ export default class GroupingManagement extends Vue {
         color: 'green'
       });
       this.yearList.push(newYear);
+      this.yearModel = newYear;
+      this.yearChanged();
     } catch (error) {
       console.log('error', error);
       this.$q.notify({
@@ -369,6 +486,19 @@ export default class GroupingManagement extends Vue {
     }
     if (newValue !== initialValue) {
       this.editedBool = true;
+    }
+  }
+
+  saveCheck() {
+    // Get list grouping species ids used by catch data
+    // that overlap with changed rows
+    let overlap = Object.keys(this.speciesGroupingUpdates).filter(
+      value => -1 !== this.catchUsing.indexOf(Number(value))
+    );
+    if (overlap.length > 0) {
+      this.saveDialog = true;
+    } else {
+      this.saveChanges();
     }
   }
 
@@ -445,7 +575,11 @@ export default class GroupingManagement extends Vue {
     // New grouping species entries
     let newGroupingSpeciesRows: object[] = [];
     for (let row of this.speciesGroupingList) {
-      if (row.grouping_species_id === 'new' && row.grouping_name && row.common_name) {
+      if (
+        row.grouping_species_id === 'new' &&
+        row.grouping_name &&
+        row.common_name
+      ) {
         console.log(row);
         newGroupingSpeciesRows.push({
           grouping_name: row.grouping_name,
@@ -460,7 +594,11 @@ export default class GroupingManagement extends Vue {
     if (newGroupingSpeciesRows.length > 0) {
       let uploadObject3 = { update_data: newGroupingSpeciesRows };
       try {
-        await axios.post('rcat/api/v1/speciesgrouping/', uploadObject3, this.authConfig);
+        await axios.post(
+          'rcat/api/v1/speciesgrouping/',
+          uploadObject3,
+          this.authConfig
+        );
         this.$q.notify({
           message: 'New Grouping Species rows saved to database',
           color: 'green'
@@ -591,6 +729,42 @@ export default class GroupingManagement extends Vue {
     }
   }
 
+  leftDrawerOpen = false;
+
+  private isAuthorized(authorizedRoles: string[]) {
+    for (const role of authorizedRoles) {
+      if (authService.getCurrentUser()!.roles.includes(role)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // beforeRouteLeave (to, from, next) {
+  //   console.log('at least im triggering')
+  //   const answer = window.confirm('Do you really want to leave? you have unsaved changes!');
+  //   if (answer) {
+  //     next();
+  //   } else {
+  //     next(false);
+  //   }
+  // }
+
+  leavePage() {
+    this.editedBool = false;
+    this.$router.push(this.storeToRoute.path);
+  }
+
+  beforeRouteLeave (to, from, next) {
+    if (!this.editedBool) {
+      next();
+    } else {
+      next(false);
+      this.leavePageDialog = true;
+      this.storeToRoute = to;
+    }
+  }
+
   mounted() {
     const token = authService.getCurrentUser()!.jwtToken!;
     this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
@@ -612,6 +786,12 @@ export default class GroupingManagement extends Vue {
     axios
       .get('rcat/api/v1/groupmanage', this.authConfig)
       .then(response => (this.yearList = response.data.map(a => a.year)))
+      .catch(error => {
+        console.log(error.response);
+      });
+    axios
+      .get('/rcat/api/v1/catchgs', this.authConfig)
+      .then(response => (this.catchUsing = response.data.grouping_species_ids))
       .catch(error => {
         console.log(error.response);
       });

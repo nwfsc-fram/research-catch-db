@@ -145,7 +145,15 @@ async function getOrgId(orgName: string) {
   try {
     output = await pool.query('SELECT organization_id FROM "ORGANIZATION_LU" WHERE name =$1', 
       [orgName]);
-    return output.rows[0];
+    if (output.rows.length > 0) {
+      return output.rows[0];
+    } else {
+      // make new entry if it doesn't exist
+      let newId = await getMaxOrgId() + 1;
+      await pool.query('INSERT INTO "ORGANIZATION_LU" VALUES ($1, $2)',
+        [newId, orgName]);
+      return {'organization_id': newId};
+    }
   } catch (err) {
     console.log(err.stack);
   }
@@ -230,7 +238,6 @@ export async function addPermit(request: Request, response: Response) {
 
   // Translate values to Ids
   let orgReturn = null;
-  let userReturn = null;
   if (result.organizationName) {
     try {
       orgReturn = await getOrgId(result.organizationName);
@@ -243,29 +250,17 @@ export async function addPermit(request: Request, response: Response) {
       return;
     }
   }
-  if (result.email) {
-    try {
-      userReturn = await getUserId(result.email);
-      result.pointOfContact = userReturn['user_id'];
-    } catch (err) {
-      response.status(400).json({
-        status: 400,
-        message: 'Could not find user_id in database: ' + err.stack
-      })
-      return;
-    }
-  }
 
   try{
     const qresult = await pool.query('INSERT INTO "RESEARCH_PROJECT" (research_project_id, '
       + 'permit_number, organization_id, project_name, permit_year, start_date, ' 
-      + 'end_date, mortality_credits_applicable, point_of_contact, data_status_id, '
-      + 'issued_by, principle_investigator, notes, staff_notes) '
+      + 'end_date, mortality_credits_applicable, data_status_id, '
+      + 'issued_by, principle_investigator, pi_email, notes, staff_notes) '
       + 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)',
       [researchProjectId, result.permitNumber, result.organizationId, result.projectName,
         result.permitYear, result.startDate, result.endDate, result.mortalityCreditsApplicable,
-        result.pointOfContact, result.dataStatus, result.issuedBy, result.principleInvestigator,
-        result.notes, result.staffNotes]) 
+        result.dataStatus, result.issuedBy, result.principleInvestigator,
+        result.email, result.notes, result.staffNotes]) 
         response.status(200).send(`Permit row added ${qresult.rows[0]}`)
       } catch (err) {
           response.status(400).json({
@@ -379,6 +374,78 @@ export async function deletePermit(request: Request, response: Response) {
   }
 }
 
+/* 
+Add permits for the year, other add permit function only adds 
+one permit at a time
+*/
+export async function addPermitYearly(request: Request, response: Response) {
+  // Beginning of sql string
+  let sqlString = `INSERT INTO "RESEARCH_PROJECT" (research_project_id, 
+    permit_number, issued_by, principle_investigator, pi_email, organization_id, 
+    project_name, permit_year, data_status_id, start_date, end_date) VALUES `
+
+  // Get max id to start counter
+  let researchId = undefined;
+  try {
+    let maxReturn = await getMaxResearchId();
+    researchId = Number(maxReturn['max']);
+  } catch(err) {
+    response.status(400).json({
+      status: 400,
+      message: 'Could not find max research_project_id in database: ' + err.stack
+    });
+    return;
+  }
+
+  // Get next unused research_project_id
+  for (let permitRow of request.body.upload_data) {
+    // Increase id counter and add to sql string
+    researchId += 1;
+    sqlString = sqlString.concat('(\'' + String(researchId) + '\', ');
+
+    // permit number, issued by, PI, and email
+    sqlString = sqlString.concat(
+      '\'', permitRow.permit_number, '\', ',
+      '\'', permitRow.issued_by, '\', ', 
+      '\'', permitRow.principle_investigator, '\', ',
+      '\'', permitRow.email, '\', '
+      );
+
+    // organization id
+    try {
+      let orgReturn = await getOrgId(permitRow.organization_name);
+      sqlString = sqlString.concat(String(orgReturn['organization_id']), ', ');
+    } catch (err) {
+      response.status(400).json({
+        status: 401,
+        message: 'Could not find find organization_id in database: ' + err.stack
+      })
+    }
+
+    // project_name, permit_year, data_status_id, start_date, end_date
+    sqlString = sqlString.concat(
+      '\'', permitRow.project_name, '\', ',
+      String(permitRow.permit_year), ', ', 
+      String(permitRow.data_status_id), ', ',
+      '\'', permitRow.start_date, '\', ',
+      '\'', permitRow.end_date, '\'),'
+      );
+  }
+
+  sqlString = sqlString.slice(0, -1);
+
+  try {
+    const qresult = await pool.query(sqlString);
+    response.status(200).send('New permits added');
+  } catch (err) {
+    console.error(err.stack);
+      response.status(400).json({
+        status: 400,
+        message: 'Could not add permit data to database: ' + err.stack
+      });
+  }
+}
+
 /*
 This function can be used to add a new permit entry to
 the RESEARCH_PROJECT table. Does not require all fields
@@ -386,12 +453,27 @@ to have values in the API call, it will automatically
 asign nulls to missing fields.
 */
 export async function addCatchData(request: Request, response: Response) {
+
   let result = {
     researchProjectId: request.body.research_project_id,
+    pointOfContact: request.body.point_of_contact,
     catchData: request.body.catch_data,
     year: request.body.year
   }
 
+  // first update the delivery date timestamp
+  try {
+    await pool.query(`UPDATE "RESEARCH_PROJECT" SET delivery_date = CURRENT_TIMESTAMP,  
+      data_status_id = 1, point_of_contact = $1 WHERE research_project_id = $2;`, [result.pointOfContact, result.researchProjectId]);
+  } catch (err) {
+    console.error(err.stack);
+      response.status(400).json({
+        status: 400,
+        message: 'Could not add catch data to database: ' + err.stack
+      });
+  }
+
+  // then assemble catch data insert
   let sqlString = `INSERT INTO "CATCH" (catch_id, grouping_species_id, 
     total_catch_mt, depth_bin_id, percent_released_at_depth, notes, 
     research_project_id) VALUES `
@@ -405,7 +487,7 @@ export async function addCatchData(request: Request, response: Response) {
     response.status(400).json({
       status: 400,
       message: 'Could not find max catch_id in database: ' + err.stack
-    })
+    });
     return;
   }
 
@@ -521,6 +603,24 @@ export async function deleteCatchData(request: Request, response: Response) {
   }
 }
 
+// Get grouping species ids currently used for catch entries
+export async function getCatchSGIds(request: Request, response: Response) {
+  try{
+    let result = await pool.query('SELECT DISTINCT grouping_species_id FROM "CATCH";');
+    let idArr: number[] = [];
+    for (let row of result.rows) {
+      idArr.push(row.grouping_species_id);
+    }
+    response.status(200).json({grouping_species_ids: idArr});
+  } catch (err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve grouping species ids for catch in database'
+    });
+  }
+}
+
 /* Add set of new species grouping rows into the GROUPING_SPECIES table for
 a new year. Rows are copied from the prior years set */
 export async function addNewYearGrouping(request: Request, response: Response) {
@@ -531,9 +631,28 @@ export async function addNewYearGrouping(request: Request, response: Response) {
     await pool.query('ALTER TABLE temp_group_copy DROP COLUMN grouping_species_id');
     await pool.query('INSERT INTO "GROUPING_SPECIES" (grouping_id, species_id, year, south_boundary, north_boundary) SELECT * FROM temp_group_copy');
     await pool.query('DROP TABLE temp_group_copy');
+    await pool.query(`do $$
+                        declare
+                          arec record;
+                          foo integer;
+                        BEGIN
+                          FOR arec IN
+                            SELECT grouping_species_id FROM "GROUPING_SPECIES_VIEW"
+                            WHERE common_name IN ('Canary Rockfish','Cowcod Rockfish','Yelloweye Rockfish')
+                            AND year=${request.body.year}
+                          LOOP
+                            foo := arec.grouping_species_id;
+                            INSERT INTO "DEPTH_BIN" (grouping_species_id, min_depth_ftm, max_depth_ftm, discard_mortality_rate)
+                            VALUES (foo, 0, 10, 21), (foo, 10, 20, 25), 
+                                  (foo, 20, 30, 25), (foo, 30, 50, 48), 
+                                  (foo, 50, 100, 57), (foo, 100, 999999, 100);
+                          END LOOP;
+                        END;
+                      $$;`);
     response.status(200).send('New groupings for ' + request.body.year + ' succesfully added');
   } catch (err) {
     await pool.query('DROP TABLE IF EXISTS temp_group_copy');
+    console.log(err);
     response.status(400).json({
       status: 400,
       message: 'Could not add new groupings for year ' + request.body.year + ': ' + err.message
@@ -730,7 +849,6 @@ export async function addSpeciesGrouping(request: Request, response: Response) {
   }
 
   newValuesString = newValuesString.slice(0, -1);
-  console.log(newValuesString);
 
   try {
     await pool.query(`INSERT INTO "GROUPING_SPECIES" (grouping_id, species_id, year, 
@@ -823,7 +941,9 @@ export async function updateSpeciesGrouping(request: Request, response: Response
 // Need to fetch grouping species combos
 export async function getSpeciesGrouping(request: Request, response: Response) {
   try {
-    let results = await pool.query('SELECT grouping_species_id, grouping_name, common_name, south_boundary, north_boundary FROM research_catch."GROUPING_SPECIES_VIEW" WHERE "year"=$1',
+    let results = await pool.query(`SELECT grouping_species_id, grouping_name, common_name, 
+                                    south_boundary, north_boundary 
+                                    FROM research_catch."GROUPING_SPECIES_VIEW" WHERE "year"=$1`,
     [request.params.year]);
     response.status(200).json(results.rows);
   } catch (err) {
@@ -831,6 +951,58 @@ export async function getSpeciesGrouping(request: Request, response: Response) {
     response.status(400).json({
       status: 400,
       message: 'Could not retrieve groupings/species from database: ' + err.stack
+    });
+  }
+}
+
+// Get Report 1 between provided years
+export async function getReport1(request: Request, response: Response) {
+  try {
+    let results = await pool.query(`SELECT * FROM "REPORT1_VIEW"
+                                    WHERE permit_year > ($1 - 1)
+                                    AND permit_year < ($2 + 1)`, 
+    [request.params.yearstart, request.params.yearend]);
+    response.status(200).json(results.rows);
+  } catch(err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve report1 data from database: ' + err.stack
+    });
+  }
+}
+
+// Get Report 2 list of permit numbers
+export async function getReport2Pnums(request: Request, response: Response){
+  try {
+    let results = await pool.query(`SELECT DISTINCT permit_number, permit_year FROM "REPORT1_VIEW"
+                                    WHERE permit_year > ($1 - 1)
+                                    AND permit_year < ($2 + 1)
+                                    ORDER BY permit_year`, 
+    [request.params.yearstart, request.params.yearend]);
+    response.status(200).json(results.rows);
+  } catch(err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve report1 data from database: ' + err.stack
+    });
+  }
+}
+
+// Get Report 3 between provided years
+export async function getReport3(request: Request, response: Response) {
+  try {
+    let results = await pool.query(`SELECT * FROM "REPORTWCR_VIEW"
+                                    WHERE permit_year > ($1 - 1)
+                                    AND permit_year < ($2 + 1)`, 
+    [request.params.yearstart, request.params.yearend]);
+    response.status(200).json(results.rows);
+  } catch(err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve report1 data from database: ' + err.stack
     });
   }
 }
