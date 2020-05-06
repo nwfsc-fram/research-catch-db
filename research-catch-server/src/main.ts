@@ -13,8 +13,6 @@ import session from 'express-session';
 
 const OpenApiValidator = require('express-openapi-validator').OpenApiValidator;
 
-import { login } from './routes/login.route';
-
 import { RSA_PRIVATE_KEY, RSA_CERT } from './util/security';
 import { validateJwtRequest } from './middleware/get-user.middleware';
 import {
