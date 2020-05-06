@@ -301,7 +301,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { date } from 'quasar';
 import axios from 'axios';
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 import { authService } from '@boatnet/bn-auth/lib';
 
 interface TableRow {

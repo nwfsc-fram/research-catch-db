@@ -81,6 +81,23 @@ import { date } from 'quasar';
 import axios from 'axios';
 import { authService } from '@boatnet/bn-auth/lib';
 
+interface SelectedRow { 
+  'permit_number': string, 
+  'organization_name': string, 
+  'project_name': string, 
+  'permit_year': number, 
+  'start_date': string, 
+  'end_date': string, 
+  'mortality_credits_applicable': boolean | null, 
+  'point_of_contact': string | null, 
+  'data_status': string, 
+  'delivery_date': string | null, 
+  'issued_by': string | null, 
+  'principle_investigator': string | null, 
+  'notes': string | null, 
+  'staff_notes': string | null 
+}
+
 @Component
 export default class Permits extends Vue {
   pagination = {
@@ -90,7 +107,7 @@ export default class Permits extends Vue {
   };
   filter = '';
   // TODO: import typing for this
-  selected: object[] = [];
+  selected: SelectedRow[] = [];
   data = [];
   columns: object[] = [];
   confirm = false;
