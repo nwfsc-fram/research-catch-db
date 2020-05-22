@@ -122,12 +122,15 @@ export default class Login extends Vue {
     this.unsubscribe = this.$store.subscribe((mutation) => {
       switch (mutation.type) {
         case 'auth/loginSuccess':
-          console.log('I passed!');
           this.$router.push('/'); // On successful login, navigate to home
           break;
         case 'auth/loginFailure':
           // todo: give user error when login fails
-          console.log('error logging in');
+          this.$q.notify({
+            message:
+              'Login Failed',
+            color: 'red'
+          });
           break;
       }
     });

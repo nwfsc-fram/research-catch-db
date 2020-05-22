@@ -295,7 +295,7 @@
       </q-card>
     </q-dialog>
 
-    <div>{{ catchUsing }}</div>
+    <div>{{ speciesGroupingList }}</div>
 
     </q-page-container>
   </q-layout>
@@ -311,11 +311,12 @@ import axios from 'axios';
 import { authService } from '@boatnet/bn-auth/lib';
 
 interface GroupingSpeciesRow {
-  grouping_species_id: number | string | null;
-  grouping_name: string | null;
-  common_name: string | null;
-  south_boundary: number | undefined;
-  north_boundary: number | undefined;
+  grouping_species_id?: number | string | null;
+  grouping_name?: string | null;
+  common_name?: string | null;
+  year?: number;
+  south_boundary?: number | undefined;
+  north_boundary?: number | undefined;
 }
 
 interface GroupingRow {
@@ -425,7 +426,8 @@ export default class GroupingManagement extends Vue {
       console.log('error', error);
       this.$q.notify({
         message:
-          'Unknown error, failed to retrieve grouping information, try refreshing page',
+          `Failed to retrieve grouping information, try refreshing page,
+           Error: ${error.response.data.message}`,
         color: 'red'
       });
     }
@@ -453,7 +455,8 @@ export default class GroupingManagement extends Vue {
     } catch (error) {
       console.log('error', error);
       this.$q.notify({
-        message: 'Unknown error, failed to add new groupings.',
+        message: `Failed to add new groupings for year ${newYear}. Error: 
+                  ${error.response.data.message}`,
         color: 'red'
       });
     } finally {
@@ -505,7 +508,7 @@ export default class GroupingManagement extends Vue {
   async saveChanges() {
     // Updated and new rows in Grouping Table
     if (Object.keys(this.groupingUpdates).length > 0) {
-      let updateGData: object[] = [];
+      let updateGData: GroupingRow[] = [];
       for (let [key, value] of Object.entries(this.groupingUpdates)) {
         updateGData.push({
           grouping_id: key,
@@ -526,8 +529,11 @@ export default class GroupingManagement extends Vue {
         this.groupingUpdates = {};
       } catch (error) {
         console.log('error', error);
+        let dataStr = updateGData.map(a => `${a.grouping_name}`);
         this.$q.notify({
-          message: 'Unknown error, failed to save any table changes',
+          message: `Failed to save any table changes. Error during update 
+                    for grouping rows ${dataStr}. Error: 
+                    ${error.response.data.message}`,
           color: 'red'
         });
         // If initial grouping table upates fails, exit out of save process
@@ -537,7 +543,7 @@ export default class GroupingManagement extends Vue {
 
     // Updated rows in Grouping Species Table
     if (Object.keys(this.speciesGroupingUpdates).length > 0) {
-      let updateGSData: object[] = [];
+      let updateGSData: GroupingSpeciesRow[] = [];
       for (let [key, value] of Object.entries(this.speciesGroupingUpdates)) {
         let addObj = { grouping_species_id: key };
         for (let [keyi, valuei] of Object.entries(value)) {
@@ -563,8 +569,10 @@ export default class GroupingManagement extends Vue {
         this.speciesGroupingUpdates = {};
       } catch (error) {
         console.log('error', error);
+        let dataStr = updateGSData.map(a => `${a.grouping_name}, ${a.common_name}`);
         this.$q.notify({
-          message: 'Unknown error, failed to save grouping species changes',
+          message: `Unknown error, failed to save grouping species changes ${dataStr}
+                    Error: ${error.response.data.message}`,
           color: 'red'
         });
         // If update fails, don't reload table or continue with save
@@ -573,7 +581,7 @@ export default class GroupingManagement extends Vue {
     }
 
     // New grouping species entries
-    let newGroupingSpeciesRows: object[] = [];
+    let newGroupingSpeciesRows: GroupingSpeciesRow[] = [];
     for (let row of this.speciesGroupingList) {
       if (
         row.grouping_species_id === 'new' &&
@@ -605,8 +613,10 @@ export default class GroupingManagement extends Vue {
         });
       } catch (error) {
         console.log('error', error);
+        let dataStr = newGroupingSpeciesRows.map(a => `${a.grouping_name}, ${a.common_name}`);
         this.$q.notify({
-          message: 'Unknown error, failed to save new grouping species rows',
+          message: `Failed to save new grouping species rows 
+          ${dataStr}. Error: ${error.response.data.message}`,
           color: 'red'
         });
         // If update fails, don't reload tables
@@ -631,7 +641,9 @@ export default class GroupingManagement extends Vue {
       console.log(error.response.data.message);
       this.$q.notify({
         message:
-          'grouping and species data updated but unknown error when re-fetching grouping species data, please try refreshing the page',
+          `grouping and species data updated but error when re-fetching 
+           grouping species data, please try refreshing the page. Error: 
+           ${error.response.data.message}`,
         color: 'red'
       });
     }
@@ -645,37 +657,48 @@ export default class GroupingManagement extends Vue {
   }
 
   async deleteRow1() {
-    try {
-      await axios.delete(
-        `rcat/api/v1/grouping/${this.selectedTab1[0].grouping_id}/${this.currentYear}`,
-        this.authConfig
-      );
-      this.selectedTab1 = [];
-      console.log('ROW DELTEDED');
-    } catch (error) {
-      console.log(error.response.data.message);
-      this.$q.notify({
-        message: 'Unknown error, failed to delete grouping set',
-        color: 'red'
-      });
-    }
+    if (this.selectedTab1[0].grouping_id) {
+      try {
+        await axios.delete(
+          `rcat/api/v1/grouping/${this.selectedTab1[0].grouping_id}/${this.currentYear}`,
+          this.authConfig
+        );
+        this.selectedTab1 = [];
+        console.log('ROW DELTEDED');
+      } catch (error) {
+        console.log(error.response.data.message);
+        this.$q.notify({
+          message: `Failed to delete grouping set. Error: 
+                    ${error.response.data.message}`,
+          color: 'red'
+        });
+      }
 
-    // repull grouping table data
-    try {
-      await axios
-        .get('rcat/api/v1/grouping/' + this.currentYear, this.authConfig)
-        .then(response => (this.groupingData = response.data));
-      await axios
-        .get('rcat/api/v1/speciesgrouping/' + this.currentYear, this.authConfig)
-        .then(response => (this.speciesGroupingList = response.data));
-      console.log('Table data refreshed from database');
-    } catch (error) {
-      console.log(error.response.data.message);
-      this.$q.notify({
-        message:
-          'grouping set deleted but unknown error when re-fetching grouping data, please try refreshing the page',
-        color: 'red'
-      });
+      // repull grouping table data
+      try {
+        await axios
+          .get('rcat/api/v1/grouping/' + this.currentYear, this.authConfig)
+          .then(response => (this.groupingData = response.data));
+        await axios
+          .get('rcat/api/v1/speciesgrouping/' + this.currentYear, this.authConfig)
+          .then(response => (this.speciesGroupingList = response.data));
+        console.log('Table data refreshed from database');
+      } catch (error) {
+        console.log(error.response.data.message);
+        this.$q.notify({
+          message:
+            `grouping set deleted but error when re-fetching grouping data, 
+            please try refreshing the page. Error: ${error.response.data.message}`,
+          color: 'red'
+        });
+      }
+    } else {
+      this.selectedTab1[0].grouping_id = 'delete';
+      var index2 = this.groupingData.findIndex(
+        x => x.grouping_id === 'delete'
+      );
+      this.groupingData.splice(index2, 1);
+      this.selectedTab1 = [];
     }
   }
 
@@ -690,7 +713,7 @@ export default class GroupingManagement extends Vue {
   }
 
   async deleteRow2() {
-    if (this.selectedTab2[0].grouping_species_id) {
+    if (this.selectedTab2[0].grouping_species_id !== 'new') {
       try {
         // Delete the row with specified grouping_species_id
         await axios.delete(
@@ -708,13 +731,13 @@ export default class GroupingManagement extends Vue {
         if (error.response.status == 403) {
           this.$q.notify({
             message:
-              'Cannot delete grouping species, data being used for catch data entries',
+              'Cannot delete grouping species, data being used for catch data entries.',
             color: 'red'
           });
         } else {
           this.$q.notify({
             message:
-              'Unknown error, failed to delete grouping species, see console for error',
+              `Failed to delete grouping species. Error: ${error.response.data.message}`,
             color: 'red'
           });
         }

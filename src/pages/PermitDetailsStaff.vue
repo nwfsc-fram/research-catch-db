@@ -22,7 +22,7 @@
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel name="permitDetails" class="bg-indigo-4" style="max-width: 600px">
               <div ref="section">
-                <div>Point of contact for data submission</div>
+                <div>Point of contact for data submission - will be blank if catch data unsubmitted</div>
                 <q-field outlined label="Point of Contact" stack-label square class="bg-indigo-1">
                   <template v-slot:control>
                     <div class="self-center full-width no-outline" tabindex="0">{{ pointOfContact }}</div>
@@ -260,7 +260,7 @@ interface TableRow {
 }
 
 @Component
-export default class Permits extends Vue {
+export default class PermitDetailsStaff extends Vue {
   permit_info = {
     newOrganization: null
   };
