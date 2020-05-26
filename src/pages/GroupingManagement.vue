@@ -28,7 +28,15 @@
             <q-item-label>Login</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item to="/permits" exact>
+        <q-item to="/" exact v-if="isAuthorized(['research-catch-staff','research-catch-user'])">
+          <q-item-section avatar>
+            <q-icon name="home" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Home / FAQs</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item to="/permits" exact v-if="isAuthorized(['research-catch-staff','research-catch-user'])">
           <q-item-section avatar>
             <q-icon name="directions_boat" />
           </q-item-section>
@@ -86,7 +94,6 @@
       <q-btn color="primary" label="Add New Year" :loading="loading" @click="addNewYear" />
     </div>
     <br />
-    <q-separator color="primary" />
     <br />
     <div class="q-gutter-md row no-wrap justify-center">
       <q-table
@@ -212,6 +219,21 @@
       <a href="https://www.fisheries.noaa.gov/privacy-policy" target="_blank">Privacy Policy</a>
     </div>
 
+    <br>
+    <q-separator color="primary" />
+    <br>
+
+    <div class="q-guter-md">
+    <div>Lock Next Year: </div>
+    <q-btn :label="newLockYear" color="primary" @click="lockYearDialog = true"/>
+    </div>
+    <br>
+    <br>
+
+
+
+
+
     <q-dialog v-model="removeDialog1" persistent>
       <q-card>
         <q-card-section class="row items-center">
@@ -295,10 +317,26 @@
       </q-card>
     </q-dialog>
 
-    <div>{{ speciesGroupingList }}</div>
+    <q-dialog v-model="lockYearDialog" persistent>
+      <q-card>
+        <q-card-section class="row items-center">
+          <q-icon name="warning" color="primary" size="56px" />
+          <span class="q-ml-sm">
+            Are you sure you want to lock submissions for {{ newLockYear }}?
+          </span>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Yes" color="primary" @click="addLockYear" v-close-popup />
+          <q-btn flat label="No" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     </q-page-container>
   </q-layout>
+
+  <div>{{ newLockYear }}</div>
 
   </div>
 </template>
@@ -334,6 +372,7 @@ export default class GroupingManagement extends Vue {
   yearModel = 2019;
   currentYear = 2019;
   yearList: number[] = [];
+  newLockYear: number = 9999;
   catchUsing: number[] = [];
   authConfig: object = {};
   selectedTab1: GroupingRow[] = [];
@@ -344,6 +383,7 @@ export default class GroupingManagement extends Vue {
   saveDialog: boolean = false;
   removeDialog1: boolean = false;
   removeDialog2: boolean = false;
+  lockYearDialog: boolean = false;
 
   storeToRoute = {path: ''};
   leavePageDialog: boolean = false;
@@ -462,6 +502,25 @@ export default class GroupingManagement extends Vue {
     } finally {
       // turn off spinyy wheel
       this.loading = false;
+    }
+  }
+
+  // Add year to locked catch submission table
+  async addLockYear() {
+    try {
+      await axios.put('rcat/api/v1/lockyear', {year: this.newLockYear} , this.authConfig);
+      this.$q.notify({
+        message: `${this.newLockYear} locked.`,
+        color: 'green'
+      });
+      this.newLockYear += 1;
+    } catch (error) {
+      console.log('error', error);
+      this.$q.notify({
+        message: `Failed to add ${this.newLockYear} to lock table. Error: 
+                  ${error.response.data.message}`,
+        color: 'red'
+      });
     }
   }
 
@@ -815,6 +874,12 @@ export default class GroupingManagement extends Vue {
     axios
       .get('/rcat/api/v1/catchgs', this.authConfig)
       .then(response => (this.catchUsing = response.data.grouping_species_ids))
+      .catch(error => {
+        console.log(error.response);
+      });
+    axios
+      .get('/rcat/api/v1/lockyear', this.authConfig)
+      .then(response => (this.newLockYear = response.data[0].max + 1))
       .catch(error => {
         console.log(error.response);
       });

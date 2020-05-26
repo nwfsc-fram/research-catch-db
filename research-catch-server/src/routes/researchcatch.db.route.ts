@@ -698,6 +698,35 @@ export async function deleteGroupingSpecies(request: Request, response: Response
   }
 }
 
+// Add year to lock permit submissions year table
+export async function lockAddYear(request: Request, response: Response) {
+  try {
+    let results = await pool.query('INSERT INTO "LOCKED_YEAR_LU" VALUES ($1)',
+    [request.body.year]);
+    response.status(200).send(`Year ${request.body.year} added to lock table`);
+  } catch (err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: `Could not add year ${request.body.year} to lock table: ` + err.message
+    });
+  }
+}
+
+// Get latest locked year from year table
+export async function getLockYear(request: Request, response: Response) {
+  try {
+    let results = await pool.query('SELECT MAX(year) FROM "LOCKED_YEAR_LU"');
+    response.status(200).json(results.rows);
+  } catch (err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve latest locked year: ' + err.message
+    });
+  }
+}
+
 // Get permit id value for a given permit name
 export async function getPermitId(request: Request, response: Response) {
   try {

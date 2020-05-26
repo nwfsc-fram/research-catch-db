@@ -781,6 +781,82 @@ paths:
                 status: 400
                 message: 'Could not update species grouping table'
 
+  /lockyear:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: Get latest submission lock year
+      operationId: getLockYear
+      responses:
+        '200':
+          description: 'Retrieved latest locked year'
+          content:
+            text/plain:
+              schema:
+                type: 'string'
+        '400':
+          description: 'Could not retrieve latest locked year'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not retrieve latest locked year'
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Grouping Management
+      summary: lock year, no more catch submissions
+      operationId: putLockYear
+      requestBody:
+        description: Need year to lock
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                year:
+                  type: number
+            example:
+              {year: 2015}
+              
+        required: true
+      responses:
+        '200':
+          description: 'Year added to lock list'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  year:
+                    type: string
+        '400':
+          description: 'Could not add year to lock table'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                properties:
+                  status:
+                    type: integer
+                    format: int64
+                  message:
+                    type: string
+              example:
+                status: 400
+                message: 'Could not add year 2019 to lock table'
+
   /reports/report1/{yearstart}/{yearend}:
     parameters:
       - in: path
