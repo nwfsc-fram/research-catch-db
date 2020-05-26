@@ -34,6 +34,8 @@ import {
   addNewYearGrouping,
   getGroupYears,
   deleteGroupingSpecies,
+  lockAddYear,
+  getLockYear,
   deleteGroupSet,
   updateSpeciesGrouping,
   updateGrouping,
@@ -103,7 +105,11 @@ app.route('/rcat/api/' + API_VERSION + '/catchgs').get(getCatchSGIds);
 app.use('/rcat/api/' + API_VERSION + '/groupmanage', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/groupmanage').post(addNewYearGrouping);
 app.route('/rcat/api/' + API_VERSION + '/groupmanage').get(getGroupYears);
-app.route('/rcat/api/' + API_VERSION + '/groupmanage/:gid').delete(deleteGroupingSpecies)
+app.route('/rcat/api/' + API_VERSION + '/groupmanage/:gid').delete(deleteGroupingSpecies);
+
+app.use('/rcat/api/' + API_VERSION + '/lockyear', validateJwtRequest);
+app.route('/rcat/api/' + API_VERSION + '/lockyear').put(lockAddYear);
+app.route('/rcat/api/' + API_VERSION + '/lockyear').get(getLockYear);
 
 app.use('/rcat/api/' + API_VERSION + '/permitid', validateJwtRequest);
 app.route('/rcat/api/' + API_VERSION + '/permitid/:pnum').get(getPermitId);

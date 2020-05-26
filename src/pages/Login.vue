@@ -65,7 +65,7 @@
 
 import Vue from 'vue';
 import Component from 'vue-class-component';
-//import { authService } from '@boatnet/bn-auth';
+import { authService } from '@boatnet/bn-auth';
 
 @Component
 export default class Login extends Vue {
@@ -113,6 +113,14 @@ export default class Login extends Vue {
     this.visible = false;
   }
 
+  private isAuthorized(authorizedRoles: string[]) {
+    for (const role of authorizedRoles) {
+      if (authService.getCurrentUser()!.roles.includes(role)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   private mounted() {
     // this.refreshPage();
@@ -122,12 +130,24 @@ export default class Login extends Vue {
     this.unsubscribe = this.$store.subscribe((mutation) => {
       switch (mutation.type) {
         case 'auth/loginSuccess':
-          console.log('I passed!');
-          this.$router.push('/'); // On successful login, navigate to home
+          if (this.isAuthorized(['research-catch-staff','research-catch-user'])) {
+            this.$router.push('/'); // On successful login, navigate to home
+          }
+          else {
+            this.$q.notify({
+              message:
+                'Account not authorized for Research Catch Application',
+              color: 'red'
+            });
+          }
           break;
         case 'auth/loginFailure':
           // todo: give user error when login fails
-          console.log('error logging in');
+          this.$q.notify({
+            message:
+              'Login Failed',
+            color: 'red'
+          });
           break;
       }
     });

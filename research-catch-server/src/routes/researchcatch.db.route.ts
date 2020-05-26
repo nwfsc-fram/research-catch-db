@@ -206,7 +206,7 @@ export async function addPermit(request: Request, response: Response) {
   } catch (err) {
     response.status(400).json({
       status: 400,
-      message: 'Could not find max research_id in database: ' + err.stack
+      message: 'Could not find max research_id in database: ' + err.message
     })
     return;
   }
@@ -220,7 +220,7 @@ export async function addPermit(request: Request, response: Response) {
     } catch (err) {
       response.status(400).json({
         status: 400,
-        message: 'Could not find max organization_id in database: ' + err.stack
+        message: 'Could not find max organization_id in database: ' + err.message
       })
       return;
     }
@@ -230,7 +230,7 @@ export async function addPermit(request: Request, response: Response) {
     } catch (err) {
       response.status(400).json({
         status: 400,
-        message: 'Could not find add new organization to database: ' + err.stack
+        message: 'Could not find add new organization to database: ' + err.message
       })
       return;
     }
@@ -245,7 +245,7 @@ export async function addPermit(request: Request, response: Response) {
     } catch (err) {
       response.status(400).json({
         status: 401,
-        message: 'Could not find find organization_id in database: ' + err.stack
+        message: 'Could not find find organization_id in database: ' + err.message
       })
       return;
     }
@@ -265,7 +265,7 @@ export async function addPermit(request: Request, response: Response) {
       } catch (err) {
           response.status(400).json({
             status: 400,
-            message: 'Could not add new permit to database: ' + err.stack
+            message: 'Could not add new permit to database: ' + err.message
           });
         }
 }
@@ -301,7 +301,7 @@ export async function updatePermit(request: Request, response: Response) {
         console.error(err.stack);
         response.status(400).json({
           status: 400,
-          message: 'Could not find organization_id: ' + err.stack
+          message: 'Could not find organization_id: ' + err.message
         })
         return;
       }
@@ -313,7 +313,7 @@ export async function updatePermit(request: Request, response: Response) {
       } catch (err) {
         response.status(400).json({
           status: 400,
-          message: 'Could not find find user_id in database: ' + err.stack
+          message: 'Could not find find user_id in database: ' + err.message
         })
         return;
       }
@@ -325,7 +325,7 @@ export async function updatePermit(request: Request, response: Response) {
       } catch (err) {
         response.status(400).json({
           status: 400,
-          message: 'Could not find find status_id in database: ' + err.stack
+          message: 'Could not find find status_id in database: ' + err.message
         })
         return;
       }
@@ -353,7 +353,7 @@ export async function updatePermit(request: Request, response: Response) {
     console.error(err.stack);
     response.status(401).json({
       status: 401,
-      message: 'Could not update permit entry: ' + err.stack
+      message: 'Could not update permit entry: ' + err.message
     });
   }
 }
@@ -392,7 +392,7 @@ export async function addPermitYearly(request: Request, response: Response) {
   } catch(err) {
     response.status(400).json({
       status: 400,
-      message: 'Could not find max research_project_id in database: ' + err.stack
+      message: 'Could not find max research_project_id in database: ' + err.message
     });
     return;
   }
@@ -418,7 +418,7 @@ export async function addPermitYearly(request: Request, response: Response) {
     } catch (err) {
       response.status(400).json({
         status: 401,
-        message: 'Could not find find organization_id in database: ' + err.stack
+        message: 'Could not find find organization_id in database: ' + err.message
       })
     }
 
@@ -441,7 +441,7 @@ export async function addPermitYearly(request: Request, response: Response) {
     console.error(err.stack);
       response.status(400).json({
         status: 400,
-        message: 'Could not add permit data to database: ' + err.stack
+        message: 'Could not add permit data to database: ' + err.message
       });
   }
 }
@@ -469,7 +469,7 @@ export async function addCatchData(request: Request, response: Response) {
     console.error(err.stack);
       response.status(400).json({
         status: 400,
-        message: 'Could not add catch data to database: ' + err.stack
+        message: 'Could not add catch data to database: ' + err.message
       });
   }
 
@@ -486,7 +486,7 @@ export async function addCatchData(request: Request, response: Response) {
   } catch (err) {
     response.status(400).json({
       status: 400,
-      message: 'Could not find max catch_id in database: ' + err.stack
+      message: 'Could not find max catch_id in database: ' + err.message
     });
     return;
   }
@@ -501,7 +501,7 @@ export async function addCatchData(request: Request, response: Response) {
     } catch (err) {
       response.status(400).json({
         status: 400,
-        message: 'Could not find matching grouping_species_id in database: ' + err.stack
+        message: 'Could not find matching grouping_species_id in database: ' + err.message
       })
       return;
     }
@@ -523,7 +523,7 @@ export async function addCatchData(request: Request, response: Response) {
       } catch (err) {
         response.status(400).json({
           status: 400,
-          message: `Could not find matching depth_bin_id in database for value ${catchRow.depthCaptured}:  ${err.stack}`
+          message: `Could not find matching depth_bin_id in database for value ${catchRow.depthCaptured}:  ${err.message}`
         })
         return;
       }
@@ -565,7 +565,7 @@ export async function addCatchData(request: Request, response: Response) {
       console.error(err.stack);
       response.status(400).json({
         status: 400,
-        message: 'Could not add catch data to database: ' + err.stack
+        message: 'Could not add catch data to database: ' + err.message
       });
     }
 }
@@ -580,7 +580,7 @@ export async function getCatchData(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve catch data from database: ' + err.stack
+      message: 'Could not retrieve catch data from database: ' + err.message
     });    
   }
 }
@@ -598,7 +598,7 @@ export async function deleteCatchData(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not delete catch data: ' + err.stack
+      message: 'Could not delete catch data: ' + err.message
     });
   }
 }
@@ -669,7 +669,7 @@ export async function getGroupYears(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve year list: ' + err.stack
+      message: 'Could not retrieve year list: ' + err.message
     });
   }
 }
@@ -687,14 +687,43 @@ export async function deleteGroupingSpecies(request: Request, response: Response
       // referenced in any catch data.
       response.status(403).json({
         status: 403,
-        message: 'Could not delete grouping species data, used by catch data: ' + err.stack
+        message: 'Could not delete grouping species data, used by catch data: ' + err.message
       })
     } else {
       response.status(400).json({
         status: 400,
-        message: 'Could not delete grouping species data: ' + err.stack
+        message: 'Could not delete grouping species data: ' + err.message
       });
     }
+  }
+}
+
+// Add year to lock permit submissions year table
+export async function lockAddYear(request: Request, response: Response) {
+  try {
+    let results = await pool.query('INSERT INTO "LOCKED_YEAR_LU" VALUES ($1)',
+    [request.body.year]);
+    response.status(200).send(`Year ${request.body.year} added to lock table`);
+  } catch (err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: `Could not add year ${request.body.year} to lock table: ` + err.message
+    });
+  }
+}
+
+// Get latest locked year from year table
+export async function getLockYear(request: Request, response: Response) {
+  try {
+    let results = await pool.query('SELECT MAX(year) FROM "LOCKED_YEAR_LU"');
+    response.status(200).json(results.rows);
+  } catch (err) {
+    console.error(err.stack);
+    response.status(400).json({
+      status: 400,
+      message: 'Could not retrieve latest locked year: ' + err.message
+    });
   }
 }
 
@@ -708,7 +737,7 @@ export async function getPermitId(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve permit_id from database: ' + err.stack
+      message: 'Could not retrieve permit_id from database: ' + err.message
     });
   }
 }
@@ -722,7 +751,7 @@ export async function getPermitsView(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve permits from database: ' + err.stack
+      message: 'Could not retrieve permits from database: ' + err.message
     });
   }
 }
@@ -740,7 +769,7 @@ export async function updateGrouping(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'could not update all grouping entires: ' + err.stack
+      message: 'could not update all grouping entires: ' + err.message
     });
   }
 }
@@ -756,12 +785,12 @@ export async function deleteGroupSet(request: Request, response: Response) {
     if (err.stack.includes('violates foreign key constraint')) {
       response.status(403).json({
         status: 403,
-        message: `Could not delete grouping species data, used by catch data: ${err.stack}`
+        message: `Could not delete grouping species data, used by catch data: ${err.message}`
       })
     } else {
       response.status(400).json({
         status: 400,
-        message: `Could not delete grouping species data for this grouping and year: ${err.stack}`
+        message: `Could not delete grouping species data for this grouping and year: ${err.message}`
       })
     }
   }
@@ -777,7 +806,7 @@ export async function getGroupingList(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve groupings from database: ' + err.stack
+      message: 'Could not retrieve groupings from database: ' + err.message
     });
   }
 }
@@ -792,7 +821,7 @@ export async function getSpeciesList(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve species from database: ' + err.stack
+      message: 'Could not retrieve species from database: ' + err.message
     });
   }
 }
@@ -855,10 +884,10 @@ export async function addSpeciesGrouping(request: Request, response: Response) {
       south_boundary, north_boundary) VALUES ${newValuesString};`)
       response.status(200).send('Grouping species data added.');
   } catch (err) {
-    console.error(err.stack);
+    console.error(err.message);
     response.status(400).json({
       status: 400,
-      message: `Final update of grouping species rows failed: ${err.stack}`
+      message: `Final update of grouping species rows failed: ${err.message}`
     });
   }     
 }
@@ -933,7 +962,7 @@ export async function updateSpeciesGrouping(request: Request, response: Response
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: `Final update of grouping species rows failed: ${err.stack}`
+      message: `Final update of grouping species rows failed: ${err.message}`
     });
   }
 }
@@ -950,7 +979,7 @@ export async function getSpeciesGrouping(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve groupings/species from database: ' + err.stack
+      message: 'Could not retrieve groupings/species from database: ' + err.message
     });
   }
 }
@@ -967,7 +996,7 @@ export async function getReport1(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve report1 data from database: ' + err.stack
+      message: 'Could not retrieve report1 data from database: ' + err.message
     });
   }
 }
@@ -985,7 +1014,7 @@ export async function getReport2Pnums(request: Request, response: Response){
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve report1 data from database: ' + err.stack
+      message: 'Could not retrieve report1 data from database: ' + err.message
     });
   }
 }
@@ -1002,7 +1031,7 @@ export async function getReport3(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve report1 data from database: ' + err.stack
+      message: 'Could not retrieve report1 data from database: ' + err.message
     });
   }
 }
@@ -1016,7 +1045,7 @@ export async function getDepthGroupings(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve grouping species with depth bins from database: ' + err.stack
+      message: 'Could not retrieve grouping species with depth bins from database: ' + err.message
     });
   }
 }
@@ -1030,7 +1059,7 @@ export async function getOrgNames(request: Request, response: Response) {
     console.error(err.stack);
     response.status(400).json({
       status: 400,
-      message: 'Could not retrieve org names from database: ' + err.stack
+      message: 'Could not retrieve org names from database: ' + err.message
     });
   }
 }

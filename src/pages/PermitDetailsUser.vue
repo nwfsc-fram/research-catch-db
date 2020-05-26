@@ -24,13 +24,13 @@
               <div>Catch Data Submitted?</div>
               <q-field outlined square class="bg-indigo-1">
                 <template v-slot:control>
-                  <div class="self-center full-width no-outline" tabindex="0">{{ pointOfContact.length > 1 ? 'Yes' : 'No' }}</div>
+                  <div class="self-center full-width no-outline" tabindex="0">{{(pointOfContact && pointOfContact.length > 0) ? 'Yes' : 'No' }}</div>
                 </template>
               </q-field>
             </div>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData">
+          <q-tab-panel name="catchData" :disable="disabledYears.includes(permit['permit_year'])">
             <div>
               You only need to complete one of the below options. Once you've uploaded a
               spreadsheet, your data will be populated in the table below. You can also
@@ -75,7 +75,7 @@
             </q-field>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData">
+          <q-tab-panel name="catchData" :disable="disabledYears.includes(permit['permit_year'])">
             <div class="row hidden justify-start q-gutter-sm">
               <div class="col-3">Data URL</div>
               <q-input class="col-6" outlined v-model="dataURL" />
@@ -120,7 +120,7 @@
             </q-field>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData">
+          <q-tab-panel name="catchData" :disable="disabledYears.includes(permit['permit_year'])">
             <br />
 
             <div class="row q-gutter-sm no-wrap">
@@ -258,6 +258,14 @@
               <a href="https://www.fisheries.noaa.gov/privacy-policy" target="_blank">Privacy Policy</a>
             </div>
           </q-tab-panel>
+
+          <q-tab-panel name="catchData" :disable="!disabledYears.includes(permit['permit_year'])">
+            <div>
+              Catch Submissions for {{ permit['permit_year'] }} have been closed. Please 
+              contact Kate Richerson (kate.e.richerson@noaa.gov) and Kayleigh Somers 
+              (kayleigh.somers@noaa.gov) with questions.
+            </div>
+          </q-tab-panel>
         </q-tab-panels>
       </q-card>
     </div>
@@ -314,7 +322,7 @@ interface TableRow {
 }
 
 @Component
-export default class Permits extends Vue {
+export default class PermitDetailsUser extends Vue {
   // to-do: poc and email will need to be hooked up to
   // login acccount
   dataURL = null;
@@ -336,6 +344,8 @@ export default class Permits extends Vue {
   tempInsert = null;
   depthBinList = ['NA', '0-10', '10-20', '20-30', '30-50', '50-100', '>100'];
   authConfig: object = {};
+
+  disabledYears = [2018,2019];
 
   data: TableRow[] = [
     {
@@ -399,7 +409,7 @@ export default class Permits extends Vue {
       })
       .catch(error => {
         console.log(error.response.data.message);
-        this.errorMessage = 'could not update permit informartion in database';
+        this.errorMessage = 'could not update permit information in database';
         this.saveFailedBlock = true;
         this.saveSuccesfulBlock = false;
       });
@@ -485,6 +495,12 @@ export default class Permits extends Vue {
     const checkResult = this.checkCatch();
     console.log(checkResult);
     if (checkResult !== 'passed') {
+      this.$q.notify({
+        message:
+          `Failed to save catch data, see bottom of the 
+          page for details`,
+        color: 'red'
+      });
       this.errorMessage =
         'could not save catch data to database. ' + checkResult;
       this.saveFailedBlock = true;
@@ -492,7 +508,7 @@ export default class Permits extends Vue {
       return;
     }
 
-    if (this.data.length > 0) {
+    if (this.data && this.data.length > 0) {
       let axiosData = {
         research_project_id: this.permit['research_project_id'], // eslint-disable-line
         point_of_contact: authService.getCurrentUser()!.username,
@@ -599,7 +615,7 @@ export default class Permits extends Vue {
   }
 
   groupingSelect(species) {
-    if (species.length > 0) {
+    if (species && species.length > 0) {
       return this.groupingBySpecies[species];
     } else {
       return this.groupingList;

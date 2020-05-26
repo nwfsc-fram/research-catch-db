@@ -27,7 +27,7 @@
             <q-item-label>Login</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item to="/" exact>
+        <q-item to="/" exact v-if="isAuthorized(['research-catch-staff','research-catch-user'])">
           <q-item-section avatar>
             <q-icon name="home" />
           </q-item-section>
@@ -35,7 +35,7 @@
             <q-item-label>Home / FAQs</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item to="/permits">
+        <q-item to="/permits" v-if="isAuthorized(['research-catch-staff','research-catch-user'])">
           <q-item-section avatar>
             <q-icon name="directions_boat" />
           </q-item-section>

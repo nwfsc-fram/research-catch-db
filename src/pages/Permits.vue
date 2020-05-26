@@ -285,6 +285,7 @@ export default class Permits extends Vue {
     axios
       .get('rcat/api/v1/permitsview', this.authConfig)
       .then(response => (this.data = response.data));
+    console.log(this.poweruser);
     this.assignColumns();
     this.isNew = false;
   }
