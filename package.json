@@ -1,9 +1,8 @@
 {
   "name": "research_catch",
   "version": "0.0.1",
-  "description": "A Quasar Framework app",
-  "productName": "QApp",
-  "cordovaId": "org.cordova.quasar.app",
+  "description": "FRAM Research Catch",
+  "productName": "Research Catch",
   "capacitorId": "",
   "author": "FRAM",
   "private": true,
@@ -12,11 +11,10 @@
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
-    "@boatnet/bn-auth": "^0.1.4",
+    "@boatnet/bn-auth": "^0.1.12",
     "@quasar/extras": "^1.5.2",
     "add": "^2.0.6",
     "axios": "^0.19.0",
-    "fs": "^0.0.1-security",
     "pg": "^7.13.0",
     "quasar": "^1.9.4",
     "vue": "2.6.11",

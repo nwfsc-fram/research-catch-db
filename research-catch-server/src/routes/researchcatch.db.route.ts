@@ -3,7 +3,7 @@
 import { Pool } from 'pg';
 import { Request, Response } from 'express';
 
-const dbConfig = require('./dbconfig').dbConfig;
+const dbConfig = require('../config/dbconfig').dbConfig;
 
 const pool = new Pool(dbConfig)
 
@@ -44,7 +44,7 @@ async function getMaxOrgId() {
 async function getStatusId(status: string) {
   let output = null;
   try {
-    output = await pool.query('SELECT data_status_id FROM "DATA_STATUS_LU" WHERE status_string =$1', 
+    output = await pool.query('SELECT data_status_id FROM "DATA_STATUS_LU" WHERE status_string =$1',
       [status]);
     return output.rows[0];
   } catch (err) {
@@ -55,7 +55,7 @@ async function getStatusId(status: string) {
 // Get the grouping_id from grouping table
 async function getGroupingId(groupingName: string) {
   try {
-    let output = await pool.query('SELECT grouping_id FROM "GROUPING" WHERE grouping_name=$1', 
+    let output = await pool.query('SELECT grouping_id FROM "GROUPING" WHERE grouping_name=$1',
       [groupingName]);
     if (output.rows.length > 0) {
       return output.rows[0];
@@ -75,7 +75,7 @@ async function getGroupingId(groupingName: string) {
 // Get the species_id from the species look up
 async function getSpeciesId(speciesName: string) {
   try {
-    let output = await pool.query('SELECT species_id FROM "SPECIES_LU" WHERE common_name=$1', 
+    let output = await pool.query('SELECT species_id FROM "SPECIES_LU" WHERE common_name=$1',
       [speciesName]);
     if (output.rows.length > 0) {
       return output.rows[0];
@@ -107,8 +107,8 @@ async function getDepthBinId(depth: string, groupingSpeciesId: number) {
   }
 
   try {
-    output = await pool.query(`SELECT depth_bin_id FROM "DEPTH_BIN" WHERE 
-    min_depth_ftm = $1 AND max_depth_ftm = $2 AND grouping_species_id= $3`, 
+    output = await pool.query(`SELECT depth_bin_id FROM "DEPTH_BIN" WHERE
+    min_depth_ftm = $1 AND max_depth_ftm = $2 AND grouping_species_id= $3`,
     [minDepth, maxDepth, groupingSpeciesId]);
     return output.rows[0];
   } catch (err) {
@@ -120,7 +120,7 @@ async function getDepthBinId(depth: string, groupingSpeciesId: number) {
 async function getGroupSpecID(grouping: string, species: string, year: Number) {
   let output = null;
   try {
-    output = await pool.query(`SELECT grouping_species_id FROM "GROUPING_SPECIES_VIEW" 
+    output = await pool.query(`SELECT grouping_species_id FROM "GROUPING_SPECIES_VIEW"
       WHERE  grouping_name=$1 AND common_name=$2 AND year=$3`,
       [grouping, species, year]);
     return output.rows[0];
@@ -143,7 +143,7 @@ async function addOrg(orgId: number, orgName: string) {
 async function getOrgId(orgName: string) {
   let output = null;
   try {
-    output = await pool.query('SELECT organization_id FROM "ORGANIZATION_LU" WHERE name =$1', 
+    output = await pool.query('SELECT organization_id FROM "ORGANIZATION_LU" WHERE name =$1',
       [orgName]);
     if (output.rows.length > 0) {
       return output.rows[0];
@@ -163,12 +163,12 @@ async function getOrgId(orgName: string) {
 async function getUserId(email: string) {
   let output = null;
   try {
-    output = await pool.query('SELECT user_id FROM "USER" WHERE email_address =$1', 
+    output = await pool.query('SELECT user_id FROM "USER" WHERE email_address =$1',
       [email]);
     return output.rows[0];
   } catch (err) {
     console.log(err.stack);
-  } 
+  }
 }
 
 // Start of exported API functions
@@ -177,7 +177,7 @@ async function getUserId(email: string) {
 This function can be used to add a new permit entry to
 the RESEARCH_PROJECT table. Does not require all fields
 to have values in the API call, it will automatically
-asign nulls to missing fields. Translates regular 
+asign nulls to missing fields. Translates regular
 meaningful field values to their id values when appropriate
 */
 export async function addPermit(request: Request, response: Response) {
@@ -253,14 +253,14 @@ export async function addPermit(request: Request, response: Response) {
 
   try{
     const qresult = await pool.query('INSERT INTO "RESEARCH_PROJECT" (research_project_id, '
-      + 'permit_number, organization_id, project_name, permit_year, start_date, ' 
+      + 'permit_number, organization_id, project_name, permit_year, start_date, '
       + 'end_date, mortality_credits_applicable, data_status_id, '
       + 'issued_by, principle_investigator, pi_email, notes, staff_notes) '
       + 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)',
       [researchProjectId, result.permitNumber, result.organizationId, result.projectName,
         result.permitYear, result.startDate, result.endDate, result.mortalityCreditsApplicable,
         result.dataStatus, result.issuedBy, result.principleInvestigator,
-        result.email, result.notes, result.staffNotes]) 
+        result.email, result.notes, result.staffNotes])
         response.status(200).send(`Permit row added ${qresult.rows[0]}`)
       } catch (err) {
           response.status(400).json({
@@ -270,10 +270,10 @@ export async function addPermit(request: Request, response: Response) {
         }
 }
 
-/* 
-Update any permit entry. This function is picky about what the input 
-parameters are named and translates regular meaninful field values to 
-their id values in the DB tables when needed. 
+/*
+Update any permit entry. This function is picky about what the input
+parameters are named and translates regular meaninful field values to
+their id values in the DB tables when needed.
  */
 export async function updatePermit(request: Request, response: Response) {
   const entries = Object.entries(request.body)
@@ -286,7 +286,7 @@ export async function updatePermit(request: Request, response: Response) {
 
   // This function should be able to handle any possible changes to
   // the research_project table, this means a lot of field handleing
-  // and translating values to ids 
+  // and translating values to ids
   // TODO: refactor this so it's putting together the query using
   // the actual variables plugged into the query call
   for (const kset of entries) {
@@ -362,7 +362,7 @@ export async function updatePermit(request: Request, response: Response) {
 export async function deletePermit(request: Request, response: Response) {
   try {
     const result = await pool.query('DELETE FROM "RESEARCH_PROJECT" WHERE permit_number = $1',
-      [request.params.permitnum]) 
+      [request.params.permitnum])
     response.status(200).send(`Permit deleted with ID: ${request.body.insertId}`)
   } catch (err) {
     // this doesn't really get used as postgres doesn't return an error when
@@ -374,14 +374,14 @@ export async function deletePermit(request: Request, response: Response) {
   }
 }
 
-/* 
-Add permits for the year, other add permit function only adds 
+/*
+Add permits for the year, other add permit function only adds
 one permit at a time
 */
 export async function addPermitYearly(request: Request, response: Response) {
   // Beginning of sql string
-  let sqlString = `INSERT INTO "RESEARCH_PROJECT" (research_project_id, 
-    permit_number, issued_by, principle_investigator, pi_email, organization_id, 
+  let sqlString = `INSERT INTO "RESEARCH_PROJECT" (research_project_id,
+    permit_number, issued_by, principle_investigator, pi_email, organization_id,
     project_name, permit_year, data_status_id, start_date, end_date) VALUES `
 
   // Get max id to start counter
@@ -406,7 +406,7 @@ export async function addPermitYearly(request: Request, response: Response) {
     // permit number, issued by, PI, and email
     sqlString = sqlString.concat(
       '\'', permitRow.permit_number, '\', ',
-      '\'', permitRow.issued_by, '\', ', 
+      '\'', permitRow.issued_by, '\', ',
       '\'', permitRow.principle_investigator, '\', ',
       '\'', permitRow.email, '\', '
       );
@@ -425,7 +425,7 @@ export async function addPermitYearly(request: Request, response: Response) {
     // project_name, permit_year, data_status_id, start_date, end_date
     sqlString = sqlString.concat(
       '\'', permitRow.project_name, '\', ',
-      String(permitRow.permit_year), ', ', 
+      String(permitRow.permit_year), ', ',
       String(permitRow.data_status_id), ', ',
       '\'', permitRow.start_date, '\', ',
       '\'', permitRow.end_date, '\'),'
@@ -463,7 +463,7 @@ export async function addCatchData(request: Request, response: Response) {
 
   // first update the delivery date timestamp
   try {
-    await pool.query(`UPDATE "RESEARCH_PROJECT" SET delivery_date = CURRENT_TIMESTAMP,  
+    await pool.query(`UPDATE "RESEARCH_PROJECT" SET delivery_date = CURRENT_TIMESTAMP,
       data_status_id = 1, point_of_contact = $1 WHERE research_project_id = $2;`, [result.pointOfContact, result.researchProjectId]);
   } catch (err) {
     console.error(err.stack);
@@ -474,8 +474,8 @@ export async function addCatchData(request: Request, response: Response) {
   }
 
   // then assemble catch data insert
-  let sqlString = `INSERT INTO "CATCH" (catch_id, grouping_species_id, 
-    total_catch_mt, depth_bin_id, percent_released_at_depth, notes, 
+  let sqlString = `INSERT INTO "CATCH" (catch_id, grouping_species_id,
+    total_catch_mt, depth_bin_id, percent_released_at_depth, notes,
     research_project_id) VALUES `
 
   // Get a new unused number for the catch_id value
@@ -581,7 +581,7 @@ export async function getCatchData(request: Request, response: Response) {
     response.status(400).json({
       status: 400,
       message: 'Could not retrieve catch data from database: ' + err.message
-    });    
+    });
   }
 }
 
@@ -590,7 +590,7 @@ export async function getCatchData(request: Request, response: Response) {
 export async function deleteCatchData(request: Request, response: Response) {
   try {
     const result = await pool.query('DELETE FROM "CATCH" WHERE research_project_id = $1',
-      [request.params.pid]) 
+      [request.params.pid])
     response.status(200).send(`Catch data deleted with ID: ${request.body.pid}`)
   } catch (err) {
     // this doesn't really get used as postgres doesn't return an error when
@@ -643,8 +643,8 @@ export async function addNewYearGrouping(request: Request, response: Response) {
                           LOOP
                             foo := arec.grouping_species_id;
                             INSERT INTO "DEPTH_BIN" (grouping_species_id, min_depth_ftm, max_depth_ftm, discard_mortality_rate)
-                            VALUES (foo, 0, 10, 21), (foo, 10, 20, 25), 
-                                  (foo, 20, 30, 25), (foo, 30, 50, 48), 
+                            VALUES (foo, 0, 10, 21), (foo, 10, 20, 25),
+                                  (foo, 20, 30, 25), (foo, 30, 50, 48),
                                   (foo, 50, 100, 57), (foo, 100, 999999, 100);
                           END LOOP;
                         END;
@@ -880,7 +880,7 @@ export async function addSpeciesGrouping(request: Request, response: Response) {
   newValuesString = newValuesString.slice(0, -1);
 
   try {
-    await pool.query(`INSERT INTO "GROUPING_SPECIES" (grouping_id, species_id, year, 
+    await pool.query(`INSERT INTO "GROUPING_SPECIES" (grouping_id, species_id, year,
       south_boundary, north_boundary) VALUES ${newValuesString};`)
       response.status(200).send('Grouping species data added.');
   } catch (err) {
@@ -889,7 +889,7 @@ export async function addSpeciesGrouping(request: Request, response: Response) {
       status: 400,
       message: `Final update of grouping species rows failed: ${err.message}`
     });
-  }     
+  }
 }
 
 // Used to update species grouping table
@@ -903,7 +903,7 @@ export async function updateSpeciesGrouping(request: Request, response: Response
   for (let gsRow of updateData) {
     // Group Species ID
     newValuesString = newValuesString.concat('(', gsRow.grouping_species_id,',');
-    
+
     // Grouping Name
     try {
       let gresult = await getGroupingId(gsRow.grouping_name);
@@ -970,8 +970,8 @@ export async function updateSpeciesGrouping(request: Request, response: Response
 // Need to fetch grouping species combos
 export async function getSpeciesGrouping(request: Request, response: Response) {
   try {
-    let results = await pool.query(`SELECT grouping_species_id, grouping_name, common_name, 
-                                    south_boundary, north_boundary 
+    let results = await pool.query(`SELECT grouping_species_id, grouping_name, common_name,
+                                    south_boundary, north_boundary
                                     FROM research_catch."GROUPING_SPECIES_VIEW" WHERE "year"=$1`,
     [request.params.year]);
     response.status(200).json(results.rows);
@@ -989,7 +989,7 @@ export async function getReport1(request: Request, response: Response) {
   try {
     let results = await pool.query(`SELECT * FROM "REPORT1_VIEW"
                                     WHERE permit_year > ($1 - 1)
-                                    AND permit_year < ($2 + 1)`, 
+                                    AND permit_year < ($2 + 1)`,
     [request.params.yearstart, request.params.yearend]);
     response.status(200).json(results.rows);
   } catch(err) {
@@ -1007,7 +1007,7 @@ export async function getReport2Pnums(request: Request, response: Response){
     let results = await pool.query(`SELECT DISTINCT permit_number, permit_year FROM "REPORT1_VIEW"
                                     WHERE permit_year > ($1 - 1)
                                     AND permit_year < ($2 + 1)
-                                    ORDER BY permit_year`, 
+                                    ORDER BY permit_year`,
     [request.params.yearstart, request.params.yearend]);
     response.status(200).json(results.rows);
   } catch(err) {
@@ -1024,7 +1024,7 @@ export async function getReport3(request: Request, response: Response) {
   try {
     let results = await pool.query(`SELECT * FROM "REPORTWCR_VIEW"
                                     WHERE permit_year > ($1 - 1)
-                                    AND permit_year < ($2 + 1)`, 
+                                    AND permit_year < ($2 + 1)`,
     [request.params.yearstart, request.params.yearend]);
     response.status(200).json(results.rows);
   } catch(err) {

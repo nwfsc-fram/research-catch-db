@@ -1,11 +1,10 @@
-// Dev Auth Server - simulates an auth server
-// For Boatnet app development use, without an actual auth endpoint.
-
-// FRAM Data Team 2019
+// Research Catch Server API
+// FRAM Data Team 2020
 
 import express from 'express';
 import cors from 'cors';
 import { Application } from 'express';
+
 import * as https from 'https';
 import { resolve } from 'path';
 import moment from 'moment';
@@ -47,11 +46,16 @@ import {
 
 const app: Application = express();
 
+const optionDefinitions = [
+  { name: 'port', alias: 'p', type: Number},
+  { name: 'path', type: String} // Full path, dist/ will be added on
+];
+
 const commandLineArgs = require('command-line-args');
 
-const optionDefinitions = [{ name: 'secure', type: Boolean }];
-
 const options = commandLineArgs(optionDefinitions);
+
+const PORT = options.port ? options.port : 9200;
 
 app.use(
   session({
@@ -152,24 +156,21 @@ app.use((err: any, req: any, res: any, next: any) => {
   });
 });
 
-if (options.secure) {
-  const httpsServer = https.createServer(
-    {
-      // Temporary Keys, not secret and publically shared
-      key: RSA_PRIVATE_KEY,
-      cert: RSA_CERT
-    },
-    app
-  );
+const httpsServer = https.createServer(
+  {
+    key: RSA_PRIVATE_KEY,
+    cert: RSA_CERT
+    // Temporary Keys, not secret and publically shared
+    // key: RSA_PRIVATE_KEY,
+    // cert: RSA_CERT
+  },
+  app
+);
 
-  // launch an HTTPS Server. Note: this does NOT mean that the application is secure
-  httpsServer.listen(9200, () => {
-    const address: any = httpsServer.address();
-    console.log(
-      'HTTPS Secure Server running at https://localhost:' + address.port
-    );
-  });
-} else {
-  // launch an HTTP Server
-  throw new Error('Only HTTPS server is allowed for auth.');
-}
+// launch an HTTPS Server. Note: this does NOT mean that the application is secure
+httpsServer.listen(PORT, () => {
+  const address: any = httpsServer.address();
+  console.log(
+    'HTTPS Secure Server running at https://localhost:' + address.port
+  );
+});

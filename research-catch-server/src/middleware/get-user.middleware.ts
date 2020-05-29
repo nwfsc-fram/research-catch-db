@@ -1,4 +1,4 @@
-import { decodeJwt } from '../util/security';
+import { decodeJwt, checkRoles } from '../util/security';
 import { Request, Response, NextFunction } from 'express';
 import moment from 'moment';
 
@@ -29,8 +29,21 @@ export async function validateJwtRequest(
 
   try {
     const jwt = await handleJwtToken(jwtEnc, res);
-    // Valid, so continue.
-    next();
+    // Validate research-catch roles
+    const DEFAULT_APPLICATION_NAME = 'BOATNET_OBSERVER';
+    const hasMatchingRoles = await checkRoles(jwt, DEFAULT_APPLICATION_NAME, ['research-catch-staff', 'research-catch-user']);
+    if (hasMatchingRoles) {
+      // After validating roles, this is valid, so continue.
+      next();
+    } else {
+      const errMessage = 'User does not have required roles.';
+      res.status(401).json({
+        status: 401,
+        message: errMessage
+      });
+      console.log(moment().format(), errMessage);
+    }
+
   } catch (err) {
     res.status(401).json({
       status: 401,
