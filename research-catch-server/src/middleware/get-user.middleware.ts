@@ -29,7 +29,10 @@ export async function validateJwtRequest(
 
   try {
     const jwt = await handleJwtToken(jwtEnc, res);
-    // Valid, so continue.
+    // TODO:
+    console.error('TODO! Need to validate research-catch roles here!');
+    console.log(jwt);
+    // After validating roles, this is valid, so continue.
     next();
   } catch (err) {
     res.status(401).json({

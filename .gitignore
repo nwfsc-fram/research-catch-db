@@ -27,3 +27,6 @@ yarn-error.log*
 *.sln
 src/store/store-flag.d.ts
 src-ssr/ssr-flag.d.ts
+
+# db config - this will be added by jenkins
+/research-catch-server/src/config/dbConfig.ts
