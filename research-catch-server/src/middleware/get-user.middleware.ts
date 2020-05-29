@@ -30,7 +30,8 @@ export async function validateJwtRequest(
   try {
     const jwt = await handleJwtToken(jwtEnc, res);
     // Validate research-catch roles
-    const hasMatchingRoles = await checkRoles(jwt, 'BOATNET_OBSERVER', ['research-catch-staff', 'research-catch-user']);
+    const DEFAULT_APPLICATION_NAME = 'BOATNET_OBSERVER';
+    const hasMatchingRoles = await checkRoles(jwt, DEFAULT_APPLICATION_NAME, ['research-catch-staff', 'research-catch-user']);
     if (hasMatchingRoles) {
       // After validating roles, this is valid, so continue.
       next();

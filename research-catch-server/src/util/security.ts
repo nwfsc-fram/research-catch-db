@@ -57,11 +57,11 @@ export async function checkRoles(payload: JwtPayload, application: string, roles
     throw new Error('Cannot check roles: bad payload or roles.');
   }
   const userinfo = JSON.parse(payload.sub);
-  const DEFAULT_APPLICATION_NAME = 'BOATNET_OBSERVER';
+
   for (let desiredRole of roles) {
     for (let role of userinfo.roles) {
-      if (userinfo.applicationName == DEFAULT_APPLICATION_NAME && userinfo.roles.includes(desiredRole)) {
-        console.log('Valid Matched role: ' + DEFAULT_APPLICATION_NAME + ' ' + role);
+      if (userinfo.applicationName == application && userinfo.roles.includes(desiredRole)) {
+        console.log('Valid Matched role: ' + application + ' ' + role);
         return true;
       }
     }
