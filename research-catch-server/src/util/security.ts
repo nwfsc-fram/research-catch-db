@@ -45,3 +45,27 @@ export async function decodeJwtObject(token: string) {
     return undefined;
   }
 }
+
+interface JwtPayload {
+  iat: number,
+  exp: number,
+  sub: any
+}
+
+export async function checkRoles(payload: JwtPayload, application: string, roles: string[]) { // Decoded JWT payload expected
+  if (!roles || !payload.sub) {
+    throw new Error('Cannot check roles: bad payload or roles.');
+  }
+  const userinfo = JSON.parse(payload.sub);
+  const DEFAULT_APPLICATION_NAME = 'BOATNET_OBSERVER';
+  for (let desiredRole of roles) {
+    for (let role of userinfo.roles) {
+      if (userinfo.applicationName == DEFAULT_APPLICATION_NAME && userinfo.roles.includes(desiredRole)) {
+        console.log('Valid Matched role: ' + DEFAULT_APPLICATION_NAME + ' ' + role);
+        return true;
+      }
+    }
+  }
+  console.error('User has no matching roles. Required: ' + roles);
+  return false;
+}
