@@ -1,9 +1,8 @@
 {
   "name": "research_catch",
   "version": "0.0.1",
-  "description": "A Quasar Framework app",
-  "productName": "QApp",
-  "cordovaId": "org.cordova.quasar.app",
+  "description": "FRAM Research Catch",
+  "productName": "Research Catch",
   "capacitorId": "",
   "author": "FRAM",
   "private": true,
