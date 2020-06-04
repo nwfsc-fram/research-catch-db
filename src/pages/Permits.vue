@@ -68,8 +68,6 @@
         </template>
       </q-table>
     </div>
-
-    <div>{{ selected }}</div>
   </div>
 </template>
 
