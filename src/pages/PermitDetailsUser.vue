@@ -30,7 +30,7 @@
             </div>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData" :disable="disabledYears.includes(permit['permit_year'])">
+          <q-tab-panel name="catchData" :disable="Number(permit['permit_year']) <= maxDisabledYear">
             <div>
               You only need to complete one of the below options. Once you've uploaded a
               spreadsheet, your data will be populated in the table below. You can also
@@ -75,7 +75,7 @@
             </q-field>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData" :disable="disabledYears.includes(permit['permit_year'])">
+          <q-tab-panel name="catchData" :disable="Number(permit['permit_year']) <= maxDisabledYear">
             <div class="row hidden justify-start q-gutter-sm">
               <div class="col-3">Data URL</div>
               <q-input class="col-6" outlined v-model="dataURL" />
@@ -120,7 +120,7 @@
             </q-field>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData" :disable="disabledYears.includes(permit['permit_year'])">
+          <q-tab-panel name="catchData" :disable="Number(permit['permit_year']) <= maxDisabledYear">
             <br />
 
             <div class="row q-gutter-sm no-wrap">
@@ -259,7 +259,7 @@
             </div>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData" :disable="!disabledYears.includes(permit['permit_year'])">
+          <q-tab-panel name="catchData" :disable="!(Number(permit['permit_year']) <= maxDisabledYear)">
             <div>
               Catch Submissions for {{ permit['permit_year'] }} have been closed. Please 
               contact Kate Richerson (kate.e.richerson@noaa.gov) and Kayleigh Somers 
@@ -345,7 +345,7 @@ export default class PermitDetailsUser extends Vue {
   depthBinList = ['NA', '0-10', '10-20', '20-30', '30-50', '50-100', '>100'];
   authConfig: object = {};
 
-  disabledYears = [2018,2019];
+  maxDisabledYear: number = 1111;
 
   data: TableRow[] = [
     {
@@ -709,6 +709,12 @@ export default class PermitDetailsUser extends Vue {
       })
       .catch(error => {
         console.log(error.response.data.message);
+      });
+    axios
+      .get('/rcat/api/v1/lockyear', this.authConfig)
+      .then(response => (this.maxDisabledYear = Number(response.data[0].max)))
+      .catch(error => {
+        console.log(error.response);
       });
   }
 }
