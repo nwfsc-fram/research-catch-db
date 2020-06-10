@@ -35,7 +35,8 @@
               You only need to complete one of the below options. Once you've uploaded a
               spreadsheet, your data will be populated in the table below. You can also
               enter data directly into the table. Once you've checked the data for errors
-              you can submit using the button at the bottom of the page.
+              you can submit using the button at the bottom of the page. Submitted data will 
+              overwrite any previously submitted data.
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -129,7 +130,11 @@
             </div>
 
             <q-banner class="bg-green-11 text-body1 justify-around">
-              For small unmeasured amounts of catch, please use 0.001mt for Total Catch.
+              For small unmeasured amounts of catch, please use 0.001mt for Total Catch. Depth Bins 
+              and percent released fields only apply to a small subset of species (Cowcod Rockfish, 
+              Canary Rockfish, and Yelloweye Rockfish). The depth bin field defines a preset 
+              range of depth values. If catch for a qualifying species was released at multiple 
+              depth ranges please use one row per depth bin range.
               <br />
               <br />If a species caught under your permit is missing from the species list,
               please contact Kate Richerson (kate.e.richerson@noaa.gov) or
@@ -179,8 +184,8 @@
                   <q-td
                     key="depthCaptured"
                     :props="props"
-                    :style="depthBinList.includes(props.row.depthCaptured) ? '' : `color:red;`"
-                  >
+                    :style="(depthBinList.includes(props.row.depthCaptured)) && (props.row.depthCaptured === 'NA' || depthGroupings.includes(props.row.grouping.concat(props.row.species))) ? '' : `color:red;`"
+                    >
                     {{ props.row.depthCaptured }}
                     <q-popup-edit v-model="props.row.depthCaptured" buttons>
                       <q-select
@@ -292,7 +297,10 @@
 
         <q-card-section
           class="q-pt-none"
-        >Catch data resubmitted for this permit will overwrite any existing data.</q-card-section>
+        >Catch data submitted for this permit will overwrite any pre-existing data. 
+        Additionally, the app will not display previously submitted data, so users 
+        may want to save any data corrections in their original excel spreadsheet.
+        </q-card-section>
 
         <q-card-actions align="right">
           <q-btn flat label="OK" color="primary" v-close-popup />

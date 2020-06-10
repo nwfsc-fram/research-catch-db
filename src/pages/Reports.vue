@@ -21,14 +21,11 @@
     </div>
 
     <div class="row justify-center q-gutter-md">
-      <q-btn color="primary" label="Observer Analysts Report #1" @click="getReport1"/>
-      <q-btn color="primary" label="Observer Analysts Report #2" @click="getReport2"/>
-      <q-btn color="primary" label="WCR SRP Report" @click="getWcrReport"/>
+      <q-btn color="primary" label="Detailed Catch Report" @click="getReport1"/>
+      <q-btn color="primary" label="Tabulated Catch Report" @click="getReport2"/>
+      <q-btn color="primary" label="Permit Summary Report" @click="getWcrReport"/>
     </div>
 
-    <div>{{ status }}</div>
-    <div>{{ rawData[0] }}</div>
-    <div>{{ csvData }}</div>
   </div>
 </template>
 
@@ -93,7 +90,7 @@ export default class Reports extends Vue {
     this.csvData = csv.join('\r\n')
 
     // Export
-    this.status = exportFile('Report1.csv', this.csvData);
+    this.status = exportFile('ReportCatchDetailed.csv', this.csvData);
   }
 
   async getReport2() {
@@ -182,7 +179,7 @@ export default class Reports extends Vue {
 
     // step 4 - now save out data string!
     this.csvData = header + dataString
-    this.status = exportFile('Report2.csv', this.csvData);
+    this.status = exportFile('ReportCatchTabulated.csv', this.csvData);
 
   }
 
@@ -213,7 +210,7 @@ export default class Reports extends Vue {
     this.csvData = csv.join('\r\n')
 
     // Export
-    this.status = exportFile('ReportWCR.csv', this.csvData);
+    this.status = exportFile('ReportPermitSummary.csv', this.csvData);
   }
 
   mounted() {

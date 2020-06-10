@@ -78,7 +78,8 @@
           <p>
             The permit details page has two tabs. At the bottom of the first tab, "PERMIT DETAILS", there
             is a User Entry section, where users may add any notes, and change the status of the "mortality credits applicable"
-            field. To save these changes, press the "SAVE" button at the bottom of the page.
+            field. The "mortality credits applicable" status is always set to false when permits are first entered into the system,
+            so make sure to update this field if needed. To save these changes, press the "SAVE" button at the bottom of the page.
           </p>
           <q-img src="../statics/permit_details.png" />
           <br />
