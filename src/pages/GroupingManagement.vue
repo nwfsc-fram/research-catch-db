@@ -64,6 +64,14 @@
               <q-item-label>Reports</q-item-label>
             </q-item-section>
           </q-item>
+          <q-item clickable tag="a" target="_blank" href="https://nwcdevfram.nwfsc.noaa.gov/research-catch/">
+            <q-item-section avatar>
+              <q-icon name="description" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Catch Form <br> Downloads</q-item-label>
+            </q-item-section>
+        </q-item>
         </q-list>
       </q-drawer>
 
@@ -89,12 +97,111 @@
             :options="yearList"
             label="Year"
             stack-label
-            dense
             @input="yearChosenCheck"
           />
-          <q-btn color="primary" label="Add New Year" :loading="loading" @click="addNewYear" />
+
+          <q-btn-toggle
+            v-model="catchLockToggle"
+            push
+            glossy
+            unelevated
+            size="sm"
+            toggle-color="secondary"
+            @input="catchLockUpdated"
+            :options="[
+          {value: 'unlocked', slot: 'one'},
+          {value: 'locked', slot: 'two'}
+        ]"
+          >
+            <template v-slot:one>
+              <div class="row items-center no-wrap">
+                <div class="text-center">
+                  Catch
+                  <br />unlocked
+                </div>
+                <q-icon right name="lock_open" />
+              </div>
+            </template>
+
+            <template v-slot:two>
+              <div class="row items-center no-wrap">
+                <div class="text-center">
+                  Catch
+                  <br />locked
+                </div>
+                <q-icon right name="lock" />
+              </div>
+            </template>
+          </q-btn-toggle>
+
+          <q-btn-toggle
+            v-model="groupingLockToggle"
+            push
+            glossy
+            unelevated
+            @input="groupingLockUpdated"
+            size="sm"
+            toggle-color="secondary"
+            :options="[
+          {value: 'unlocked', slot: 'one'},
+          {value: 'locked', slot: 'two'}
+        ]"
+          >
+            <template v-slot:one>
+              <div class="row items-center no-wrap">
+                <div class="text-center">
+                  Group
+                  <br />unlocked
+                </div>
+                <q-icon right name="lock_open" />
+              </div>
+            </template>
+
+            <template v-slot:two>
+              <div class="row items-center no-wrap">
+                <div class="text-center">
+                  Group
+                  <br />locked
+                </div>
+                <q-icon right name="lock" />
+              </div>
+            </template>
+          </q-btn-toggle>
+
+          <q-btn 
+            color="primary"
+            label="CSV"
+            icon-right="get_app"
+            @click="csvGroupingDownload"
+          ></q-btn>
+
+          <q-btn
+            color="negative"
+            label="Delete Year"
+            dense
+            @click="deleteYearDialog = true"
+            :loading="loading"
+          />
+
+          <q-separator color="primary" vertical />
+
+          <q-input
+            outlined
+            v-model.number="newYearModel"
+            label="New Year"
+            stack-label
+            dense
+            type="number"
+          />
+
+          <q-btn color="primary" label="Add New Year" :loading="loading" dense @click="addNewYear" />
         </div>
         <br />
+        <br />
+        <div class="q-gutter-md row no-wrap justify-center">
+          Added rows may not be ordered as expected in the below tables. Check the top or 
+          bottom of the table for newly added blank rows.
+        </div>
         <br />
         <div class="q-gutter-md row no-wrap justify-center">
           <q-table
@@ -111,13 +218,19 @@
             :selected.sync="selectedTab1"
           >
             <template v-slot:top-right>
-              <q-btn color="primary" dense label="Add row" @click="addRowTab1" />
+              <q-btn
+                color="primary"
+                dense
+                label="Add row"
+                @click="addRowTab1"
+                :disable="groupingLockToggle === 'locked'"
+              />
               <q-btn
                 class="q-ml-sm"
                 dense
                 color="primary"
                 label="Remove row"
-                :disable="selectedTab1.length === 0"
+                :disable="(selectedTab1.length === 0) || (groupingLockToggle === 'locked')"
                 @click="removeDialog1 = true"
               />
               <q-space />
@@ -137,13 +250,14 @@
             </template>
             <template v-slot:body="props">
               <q-tr :props="props">
-                <q-checkbox v-model="props.selected" />
+                <q-checkbox v-model="props.selected" :disable="groupingLockToggle === 'locked'" />
                 <q-td key="grouping1" :props="props">
                   {{ props.row.grouping_name }}
                   <q-popup-edit
                     @before-show="cloneRow(props.row)"
                     v-model="clonedRow.grouping_name"
                     buttons
+                    :disable="groupingLockToggle === 'locked'"
                     @save="updatedValue(props.row, clonedRow.grouping_name, 'grouping_name', 'g')"
                   >
                     <q-input v-model="clonedRow.grouping_name" dense autofocus />
@@ -167,13 +281,19 @@
             :selected.sync="selectedTab2"
           >
             <template v-slot:top-right>
-              <q-btn color="primary" dense label="Add row" @click="addRowTab2" />
+              <q-btn
+                color="primary"
+                dense
+                label="Add row"
+                @click="addRowTab2"
+                :disable="groupingLockToggle === 'locked'"
+              />
               <q-btn
                 class="q-ml-sm"
                 dense
                 color="primary"
                 label="Remove row"
-                :disable="selectedTab2.length === 0"
+                :disable="(selectedTab2.length === 0) || (groupingLockToggle === 'locked')"
                 @click="removeDialog2 = true"
               />
               <q-input
@@ -192,21 +312,23 @@
             </template>
             <template v-slot:body="props">
               <q-tr :props="props">
-                <q-checkbox v-model="props.selected" />
+                <q-checkbox v-model="props.selected" :disable="groupingLockToggle === 'locked'" />
                 <q-td key="grouping2" :props="props">
                   {{ props.row.grouping_name }}
                   <q-popup-edit
-                    @before-show="cloneRow(props.row)"
+                    @before-show="refetchGroupingList(props.row)"
                     v-model="clonedRow.grouping_name"
                     buttons
+                    :disable="groupingLockToggle === 'locked'"
                     @save="updatedValue(props.row, clonedRow.grouping_name, 'grouping_name', 'gs')"
+                    :validate="testValidation"
+                    @hide="testValidation"
                   >
                     <q-select
                       v-model="clonedRow.grouping_name"
                       dense
                       :options="groupingList"
                       options-sanitize
-                      @add="test()"
                     />
                   </q-popup-edit>
                 </q-td>
@@ -217,6 +339,7 @@
                     @before-show="cloneRow(props.row)"
                     v-model="clonedRow.common_name"
                     buttons
+                    :disable="groupingLockToggle === 'locked'"
                     @save="updatedValue(props.row, clonedRow.common_name, 'common_name', 'gs')"
                   >
                     <q-input v-model="clonedRow.common_name" dense autofocus />
@@ -229,6 +352,7 @@
                     @before-show="cloneRow(props.row)"
                     v-model="clonedRow.south_boundary"
                     buttons
+                    :disable="groupingLockToggle === 'locked'"
                     @save="updatedValue(props.row, clonedRow.south_boundary, 'south_boundary', 'gs')"
                   >
                     <q-input v-model="clonedRow.south_boundary" type="number" dense autofocus />
@@ -240,6 +364,7 @@
                     @before-show="cloneRow(props.row)"
                     v-model="clonedRow.north_boundary"
                     buttons
+                    :disable="groupingLockToggle === 'locked'"
                     @save="updatedValue(props.row, clonedRow.north_boundary, 'north_boundary', 'gs')"
                   >
                     <q-input v-model="clonedRow.north_boundary" type="number" dense autofocus />
@@ -255,24 +380,15 @@
           <a href="https://www.fisheries.noaa.gov/privacy-policy" target="_blank">Privacy Policy</a>
         </div>
 
-        <br />
-        <q-separator color="primary" />
-        <br />
-
-        <div class="q-guter-md">
-          <div>Lock Next Year:</div>
-          <q-btn :label="newLockYear" color="primary" @click="lockYearDialog = true" />
-        </div>
-        <br />
-        <br />
-
         <q-dialog v-model="removeDialog1" persistent>
           <q-card>
             <q-card-section class="row items-center">
               <q-icon name="delete_forever" color="primary" size="56px" />
               <span
                 class="q-ml-sm"
-              >Do you really want to remove this grouping? All associated species listings will also be deleted. Deletions are immediately applied to the database.</span>
+              >Do you really want to remove this grouping? If row is a pre-existing grouping, 
+              all associated species listings will also be deleted. Deletions are immediately 
+              applied to the database.</span>
             </q-card-section>
 
             <q-card-actions align="center">
@@ -288,7 +404,7 @@
               <q-icon name="delete_forever" color="primary" size="56px" left />
               <span
                 class="q-ml-sm"
-              >Do you really want to remove this row? Deletions are immediately applied to the database.</span>
+              >Do you really want to remove this row? Deletions are immediately applied to the database (if applicable).</span>
             </q-card-section>
 
             <q-card-actions align="center">
@@ -349,23 +465,21 @@
           </q-card>
         </q-dialog>
 
-        <q-dialog v-model="lockYearDialog" persistent>
+        <q-dialog v-model="deleteYearDialog" persistent>
           <q-card>
             <q-card-section class="row items-center">
               <q-icon name="warning" color="primary" size="56px" />
-              <span class="q-ml-sm">Are you sure you want to lock submissions for {{ newLockYear }}?</span>
+              <span class="q-ml-sm">Are you sure you want to delete groupings for {{ currentYear }}?</span>
             </q-card-section>
 
             <q-card-actions align="right">
-              <q-btn flat label="Yes" color="primary" @click="addLockYear" v-close-popup />
+              <q-btn flat label="Yes" color="primary" @click="deleteYearGroupings" v-close-popup />
               <q-btn flat label="No" color="primary" v-close-popup />
             </q-card-actions>
           </q-card>
         </q-dialog>
       </q-page-container>
     </q-layout>
-
-    <div>{{ newLockYear }}</div>
   </div>
 </template>
 
@@ -375,6 +489,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import axios from 'axios';
 import { authService } from '@boatnet/bn-auth/lib';
+import { exportFile } from 'quasar';
 
 interface GroupingSpeciesRow {
   grouping_species_id?: number | string | null;
@@ -398,10 +513,10 @@ export default class GroupingManagement extends Vue {
   speciesGroupingList: GroupingSpeciesRow[] = [];
   groupingUpdates: object = {};
   speciesGroupingUpdates: object = {};
+  yearList: number[] = [];
   yearModel = 2019;
   currentYear = 2019;
-  yearList: number[] = [];
-  newLockYear: number = 9999;
+  newYearModel: number = 9999;
   catchUsing: number[] = [];
   authConfig: object = {};
   selectedTab1: GroupingRow[] = [];
@@ -412,10 +527,13 @@ export default class GroupingManagement extends Vue {
   saveDialog: boolean = false;
   removeDialog1: boolean = false;
   removeDialog2: boolean = false;
-  lockYearDialog: boolean = false;
-
+  deleteYearDialog: boolean = false;
+  groupingLockToggle: string = '';
+  catchLockToggle: string = '';
   storeToRoute = { path: '' };
   leavePageDialog: boolean = false;
+  csvData = '';
+  status: Error | boolean = true;
 
   temp: object[] = [];
 
@@ -478,6 +596,34 @@ export default class GroupingManagement extends Vue {
       this.speciesGroupingUpdates = {};
       this.groupingUpdates = {};
       await axios
+        .post(
+          '/rcat/api/v1/lockyear',
+          { table: 'catch', year: this.currentYear },
+          this.authConfig
+        )
+        .then(response =>
+          response.data
+            ? (this.catchLockToggle = 'locked')
+            : (this.catchLockToggle = 'unlocked')
+        )
+        .catch(error => {
+          console.log(error.response);
+        });
+      await axios
+        .post(
+          '/rcat/api/v1/lockyear',
+          { table: 'grouping', year: this.currentYear },
+          this.authConfig
+        )
+        .then(response =>
+          response.data
+            ? (this.groupingLockToggle = 'locked')
+            : (this.groupingLockToggle = 'unlocked')
+        )
+        .catch(error => {
+          console.log(error.response);
+        });
+      await axios
         .get('rcat/api/v1/grouping/' + this.currentYear, this.authConfig)
         .then(response => (this.groupingData = response.data))
         .catch(error => {
@@ -503,10 +649,26 @@ export default class GroupingManagement extends Vue {
 
   // create new year for new next missing, copy prior years entries as starting point
   async addNewYear() {
+    // check if year is valid 4-digit number that doesn't already exist
+    if (this.newYearModel.toString().length != 4) {
+      this.$q.notify({
+        message: 'Year value not a four digit number',
+        color: 'red'
+      });
+      return;
+    }
+
+    if (this.yearList.includes(this.newYearModel)) {
+      this.$q.notify({
+        message: `Year groupings already exist for ${this.newYearModel}`,
+        color: 'red'
+      });
+      return;
+    }
+
     // turn on spinny wheel
     this.loading = true;
-    let newYear = Math.max(...this.yearList) + 1;
-
+    let newYear = this.newYearModel;
     try {
       await axios.post(
         'rcat/api/v1/groupmanage',
@@ -533,40 +695,121 @@ export default class GroupingManagement extends Vue {
     }
   }
 
-  // Add year to locked catch submission table
-  async addLockYear() {
+  // Delete year
+  async deleteYearGroupings() {
     try {
-      await axios.put(
-        'rcat/api/v1/lockyear',
-        { year: this.newLockYear },
+      await axios.delete(
+        'rcat/api/v1/yeargroupings/' + this.currentYear,
         this.authConfig
       );
-      this.$q.notify({
-        message: `${this.newLockYear} locked.`,
-        color: 'green'
-      });
-      this.newLockYear += 1;
+      this.yearModel = 2019;
+      axios
+        .get('rcat/api/v1/groupmanage', this.authConfig)
+        .then(response => (this.yearList = response.data.map(a => a.year)))
+        .catch(error => {
+          console.log(error.response);
+        });
+      this.yearChanged();
     } catch (error) {
       console.log('error', error);
       this.$q.notify({
-        message: `Failed to add ${this.newLockYear} to lock table. Error: 
+        message: `Failed to delete groupings for ${this.currentYear}. Error: 
                   ${error.response.data.message}`,
         color: 'red'
       });
     }
   }
 
+  // csv downloading of groupings
+  async csvGroupingDownload() {
+    // Translate JSON to csv data
+    const replacer = (key, value) => value === null ? '' : value // specify how you want to handle null values here
+    const header = Object.keys(this.speciesGroupingList[0])
+    let csv = this.speciesGroupingList.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+    csv.unshift(header.join(','))
+    this.csvData = csv.join('\r\n')
+
+    // Export
+    this.status = exportFile(`${this.currentYear}Groupings.csv`, this.csvData);
+  }
+
+  // Update catch lock
+  async catchLockUpdated() {
+    if (this.catchLockToggle === 'locked') {
+      try {
+        await axios.put(
+          'rcat/api/v1/lockyear',
+          { table: 'catch', year: this.currentYear },
+          this.authConfig
+        );
+      } catch (error) {
+        console.log('error', error);
+        this.$q.notify({
+          message: `Failed to lock catch for ${this.currentYear}. Error: 
+                    ${error.response.data.message}`,
+          color: 'red'
+        });
+        this.catchLockToggle = 'unlocked';
+      }
+    } else {
+      try {
+        await axios.delete(
+          'rcat/api/v1/lockyear/' + 'catch/' + this.currentYear,
+          this.authConfig
+        );
+      } catch (error) {
+        console.log('error', error);
+        this.$q.notify({
+          message: `Failed to unlock catch for ${this.currentYear}. Error: 
+                    ${error.response.data.message}`,
+          color: 'red'
+        });
+        this.catchLockToggle = 'locked';
+      }
+    }
+  }
+
+  // Update grouping lock
+  async groupingLockUpdated() {
+    if (this.groupingLockToggle === 'locked') {
+      try {
+        await axios.put(
+          'rcat/api/v1/lockyear',
+          { table: 'grouping', year: this.currentYear },
+          this.authConfig
+        );
+      } catch (error) {
+        console.log('error', error);
+        this.$q.notify({
+          message: `Failed to lock groupings for ${this.currentYear}. Error: 
+                    ${error.response.data.message}`,
+          color: 'red'
+        });
+        this.groupingLockToggle = 'unlocked';
+      }
+    } else {
+      try {
+        await axios.delete(
+          'rcat/api/v1/lockyear/' + 'grouping/' + this.currentYear,
+          this.authConfig
+        );
+      } catch (error) {
+        console.log('error', error);
+        this.$q.notify({
+          message: `Failed to unlock groupings for ${this.currentYear}. Error: 
+                    ${error.response.data.message}`,
+          color: 'red'
+        });
+        this.groupingLockToggle = 'locked';
+      }
+    }
+  }
+
   updatedValue(originalRow, newValue, key, type) {
-    console.log(originalRow);
-    console.log(newValue);
     var initialValue = originalRow[key];
     originalRow[key] = newValue;
-    console.log(originalRow);
 
     if (type === 'g') {
-      console.log('updating grouping list');
-      this.groupingList = this.groupingData.map(a => a.grouping_name).sort();
-      console.log(this.groupingList);
       if (!(originalRow.grouping_id in this.groupingUpdates)) {
         this.groupingUpdates[originalRow.grouping_id] = originalRow;
       }
@@ -836,7 +1079,7 @@ export default class GroupingManagement extends Vue {
         if (error.response.status == 403) {
           this.$q.notify({
             message:
-              'Cannot delete grouping species, data being used for catch data entries.',
+              'Cannot delete grouping species, data being used for catch data entries',
             color: 'red'
           });
         } else {
@@ -858,31 +1101,38 @@ export default class GroupingManagement extends Vue {
 
   leftDrawerOpen = false;
 
-  test() {
-    console.log('I added.....');
+  refetchGroupingList(row) {
+    console.log('Group List Updated');
+    this.groupingList = this.groupingData.map(a => a.grouping_name).sort();
+    this.cloneRow(row);
+  }
+
+  testValidation(val) {
+    console.log('validation was triggered');
+    console.log('new value is:' + val);
+    return true;
   }
 
   cloneRow(row) {
     this.clonedRow = { ...row };
   }
 
-  customSort (rows, sortBy, descending) {
-    const rdata = [ ...rows ]
+  customSort(rows, sortBy, descending) {
+    const rdata = [...rows];
     if (sortBy) {
       rdata.sort((a, b) => {
-        const x = descending ? b : a
-        const y = descending ? a : b
-        if ( sortBy === 'common_name') {
+        const x = descending ? b : a;
+        const y = descending ? a : b;
+        if (sortBy === 'common_name') {
           // string sort
-          return x[sortBy] > y[sortBy] ? 1 : x[sortBy] < y[sortBy] ? -1 : 0
-        }
-        else {
+          return x[sortBy] > y[sortBy] ? 1 : x[sortBy] < y[sortBy] ? -1 : 0;
+        } else {
           // numeric sort
-          return parseFloat(x[sortBy]) - parseFloat(y[sortBy])
+          return parseFloat(x[sortBy]) - parseFloat(y[sortBy]);
         }
-      })
+      });
     }
-    return rdata
+    return rdata;
   }
 
   private isAuthorized(authorizedRoles: string[]) {
@@ -950,8 +1200,30 @@ export default class GroupingManagement extends Vue {
         console.log(error.response);
       });
     axios
-      .get('/rcat/api/v1/lockyear', this.authConfig)
-      .then(response => (this.newLockYear = response.data[0].max + 1))
+      .post(
+        '/rcat/api/v1/lockyear',
+        { table: 'catch', year: this.currentYear },
+        this.authConfig
+      )
+      .then(response =>
+        response.data
+          ? (this.catchLockToggle = 'locked')
+          : (this.catchLockToggle = 'unlocked')
+      )
+      .catch(error => {
+        console.log(error.response);
+      });
+    axios
+      .post(
+        '/rcat/api/v1/lockyear',
+        { table: 'grouping', year: this.currentYear },
+        this.authConfig
+      )
+      .then(response =>
+        response.data
+          ? (this.groupingLockToggle = 'locked')
+          : (this.groupingLockToggle = 'unlocked')
+      )
       .catch(error => {
         console.log(error.response);
       });

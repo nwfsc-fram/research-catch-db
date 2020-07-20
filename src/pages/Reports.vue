@@ -94,11 +94,7 @@ export default class Reports extends Vue {
   }
 
   async getReport2() {
-    // This is quite right, I need to be grouping all the srp's together so they go in the same order
-    // get full set of SRPs, do an initial loop to get this i think
-    // so grouping/year key will gsy: {srp?:   srp?:   srp?:  total: }
-    // then have to inner outer loop (yuck) to assign in order into final string
-    // then if entry is misssing, fill in with zero or blank or w/e
+    // Report 2, tabulated
 
     // part one - get SRPs array in year order
     try {

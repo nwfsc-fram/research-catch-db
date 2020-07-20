@@ -30,13 +30,15 @@
             </div>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData" :disable="Number(permit['permit_year']) <= maxDisabledYear">
+          <q-tab-panel name="catchData" :disable="catchLockedBool">
             <div>
               You only need to complete one of the below options. Once you've uploaded a
               spreadsheet, your data will be populated in the table below. You can also
               enter data directly into the table. Once you've checked the data for errors
               you can submit using the button at the bottom of the page. Submitted data will 
-              overwrite any previously submitted data.
+              overwrite any previously submitted data. You can download the Microsoft Excel 
+              sheet and CSV versions of the groupings for each year 
+              <a href="https://nwcdevfram.nwfsc.noaa.gov/research-catch/">here</a>.
             </div>
           </q-tab-panel>
         </q-tab-panels>
@@ -76,7 +78,7 @@
             </q-field>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData" :disable="Number(permit['permit_year']) <= maxDisabledYear">
+          <q-tab-panel name="catchData" :disable="catchLockedBool">
             <div class="row hidden justify-start q-gutter-sm">
               <div class="col-3">Data URL</div>
               <q-input class="col-6" outlined v-model="dataURL" />
@@ -121,7 +123,7 @@
             </q-field>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData" :disable="Number(permit['permit_year']) <= maxDisabledYear">
+          <q-tab-panel name="catchData" :disable="catchLockedBool">
             <br />
 
             <div class="row q-gutter-sm no-wrap">
@@ -264,7 +266,7 @@
             </div>
           </q-tab-panel>
 
-          <q-tab-panel name="catchData" :disable="!(Number(permit['permit_year']) <= maxDisabledYear)">
+          <q-tab-panel name="catchData" :disable="!catchLockedBool">
             <div>
               Catch Submissions for {{ permit['permit_year'] }} have been closed. Please 
               contact Kate Richerson (kate.e.richerson@noaa.gov) and Kayleigh Somers 
@@ -353,7 +355,7 @@ export default class PermitDetailsUser extends Vue {
   depthBinList = ['NA', '0-10', '10-20', '20-30', '30-50', '50-100', '>100'];
   authConfig: object = {};
 
-  maxDisabledYear: number = 1111;
+  catchLockedBool = false;
 
   data: TableRow[] = [
     {
@@ -719,8 +721,8 @@ export default class PermitDetailsUser extends Vue {
         console.log(error.response.data.message);
       });
     axios
-      .get('/rcat/api/v1/lockyear', this.authConfig)
-      .then(response => (this.maxDisabledYear = Number(response.data[0].max)))
+      .post('/rcat/api/v1/catchlockyear', {year: this.permit['permit_year']}, this.authConfig)  
+      .then(response => (this.catchLockedBool = response.data))
       .catch(error => {
         console.log(error.response);
       });
