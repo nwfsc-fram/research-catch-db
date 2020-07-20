@@ -26,13 +26,23 @@
     <q-card class="q-gutter-md bg-blue-2">
       <div class="text-h6">FAQs</div>
       <div>
+        <p class="text-subtitle2">What are mortality credits?</p>
+        <p>
+          For a few species (cowcod, yelloweye, and canary rockfish) 
+          that were caught with hook and line gear and released at depth using a descending device, 
+          we assume that mortality is less then 100%. The mortality rate for each species depends on the 
+          depth of capture. If your study had cowcod, yelloweye, and/or canary rockfish caught with hook 
+          and line and released at depth, please include the appropriate information (depth captured and 
+          percent released at depth) so that we can calculate the appropriate estimated mortality. You 
+          do not need to include this information for any other species or gear.
+        </p>
         <p class="text-subtitle2">What are the unid groupings?</p>
         <p>
           Unid grouping categories are for recorded catch that did or could not be categorized
           into a more specific sub-category. For example, sometimes nearshore rockfish are caught
           but not recorded under their specific sub-species. In this instance the nearshore rockfish unid
           category can be used to list this catch.
-        </p>
+        </p> 
       </div>
     </q-card>
 

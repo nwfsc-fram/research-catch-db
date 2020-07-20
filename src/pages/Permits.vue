@@ -1,7 +1,11 @@
 <template>
   <div class="text-center">
     <br />
-    <div>Check a box on the left hand side of the table below to view/edit a permit.</div>
+    <div>
+      Check a box on the left hand side of the table below to view/edit a permit. 
+      To order the table by column values, click on the arrow to the left of the 
+      column name.
+    </div>
 
     <div class="q-pa-md">
       <q-table
@@ -164,7 +168,6 @@ export default class Permits extends Vue {
     this.columns = [
       {
         name: 'permitNumber',
-        align: 'center',
         label: 'Permit Numbers',
         field: 'permit_number',
         headers: 'permit_number',

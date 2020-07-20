@@ -59,6 +59,14 @@
             <q-item-label>Reports</q-item-label>
           </q-item-section>
         </q-item>
+        <q-item clickable tag="a" target="_blank" href="https://nwcdevfram.nwfsc.noaa.gov/research-catch/">
+          <q-item-section avatar>
+            <q-icon name="description" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Catch Form <br> Downloads</q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
