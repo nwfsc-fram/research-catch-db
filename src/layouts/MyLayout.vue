@@ -17,14 +17,23 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered content-class="bg-grey-2">
+    <q-drawer
+      v-model="leftDrawerOpen"
+      show-if-above
+      bordered
+      content-class="bg-grey-2"
+      :mini="miniState"
+      @mouseover="miniState = false"
+      @mouseout="miniState = true"
+      mini-to-overlay
+    >
       <q-list>
         <q-item to="/login">
           <q-item-section avatar>
             <q-icon name="meeting_room" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Login</q-item-label>
+            <q-item-label>User Login</q-item-label>
           </q-item-section>
         </q-item>
         <q-item to="/" exact v-if="isAuthorized(['research-catch-staff','research-catch-user'])">
@@ -59,12 +68,20 @@
             <q-item-label>Reports</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item clickable tag="a" target="_blank" href="https://nwcdevfram.nwfsc.noaa.gov/research-catch/">
+        <q-item
+          clickable
+          tag="a"
+          target="_blank"
+          href="https://nwcdevfram.nwfsc.noaa.gov/research-catch/"
+        >
           <q-item-section avatar>
             <q-icon name="description" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Catch Form <br> Downloads</q-item-label>
+            <q-item-label>
+              Catch Form
+              <br />Downloads
+            </q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
@@ -75,17 +92,17 @@
         <q-space />
         <div class="justify-around">
           For questions related to the functioning of the Research
-          Catch App, please contact nmfs.nwfsc.fram.data.team@noaa.gov. For 
-          the grouping or catch content please contact Kate Richerson 
-          (kate.e.richerson@noaa.gov) or Kayleigh Somers 
-          (kayleigh.somers@noaa.gov). For permits 
+          Catch App, please contact nmfs.nwfsc.fram.data.team@noaa.gov. For
+          the grouping or catch content please contact Kate Richerson
+          (kate.e.richerson@noaa.gov) or Kayleigh Somers
+          (kayleigh.somers@noaa.gov). For permits
           please contact wcr.gfresearchpermits@noaa.gov.
         </div>
       </q-toolbar>
     </q-footer>
 
     <q-page-container>
-      <router-view ref="child"/>
+      <router-view ref="child" />
     </q-page-container>
   </q-layout>
 </template>
@@ -98,6 +115,7 @@ import { authService } from '@boatnet/bn-auth/lib';
 @Component
 export default class MyLayout extends Vue {
   leftDrawerOpen = false;
+  miniState = true;
 
   private isAuthorized(authorizedRoles: string[]) {
     for (const role of authorizedRoles) {

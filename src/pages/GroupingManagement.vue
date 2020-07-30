@@ -18,14 +18,23 @@
         </q-toolbar>
       </q-header>
 
-      <q-drawer v-model="leftDrawerOpen" show-if-above bordered content-class="bg-grey-2">
+      <q-drawer 
+        v-model="leftDrawerOpen" 
+        show-if-above 
+        bordered 
+        content-class="bg-grey-2" 
+        :mini="miniState"
+        @mouseover="miniState = false"
+        @mouseout="miniState = true"
+        mini-to-overlay
+      >
         <q-list>
           <q-item to="/login">
             <q-item-section avatar>
               <q-icon name="meeting_room" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>Login</q-item-label>
+              <q-item-label>User Login</q-item-label>
             </q-item-section>
           </q-item>
           <q-item to="/" exact v-if="isAuthorized(['research-catch-staff','research-catch-user'])">
@@ -534,6 +543,7 @@ export default class GroupingManagement extends Vue {
   leavePageDialog: boolean = false;
   csvData = '';
   status: Error | boolean = true;
+  miniState = true;
 
   temp: object[] = [];
 

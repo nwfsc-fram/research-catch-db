@@ -220,7 +220,7 @@ export default class Permits extends Vue {
       },
       {
         name: 'deliveryDate',
-        label: 'Delivery Date',
+        label: 'Data Delivered On',
         field: 'delivery_date',
         sortable: true,
         format: val => date.formatDate(val, 'YYYY-MM-DD HH:mm:ss')
