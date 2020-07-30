@@ -4,22 +4,48 @@
     <q-card class="q-gutter-md bg-indigo-2">
       <div>
         <p class="text-subtitle2">Welcome to the NWFSC's Research Catch App!</p>
+
+
+
+        
         <p>
-          To enter your catch data please go to the permit page
-          linked in the left sidebar, and click the check box next to the appropriate permit. Then click the
-          "submit catch data" button at the top. You will then be directed to a page with two tabs, with
-          the catch data tab to the right. For more detailed instructions see below for step by step documentation.
+          The Pacific Fishery Management Council determines the amount of available catch 
+          for groundfish research activities each year based on recent averages of annual 
+          research catch. The catch data you submit is counted and included in the annual 
+          Groundfish Mortality Report and helps inform future set-asides for research catch 
+          as well as potential environmental impacts from research activities.
         </p>
         <p>
-          The species and management groupings in this database reflect the Pacific Fishery
-          Management Council's groupings in the year the catch occurred. These groupings typically
-          change at least slightly each year, so you may need to update categories to reflect the
-          correct management and species groupings in the database.
-        </p>If your catch was speciated to a finer level than the groupings included here,
-        please combine into the larger category in the database. If a groundfish or shared ecosystem component
-        species is not included in the database and a larger category does not fit, please contact
-        Kate Richerson (kate.e.richerson@noaa.gov) and Kayleigh Somers (kayleigh.somers@noaa.gov).
-        <p></p>
+          To enter your catch data please go to the permit page linked in the left sidebar, 
+          and click the check box next to the appropriate permit. Then click the 
+          "submit catch data" button at the top. You will then be directed to a page with two 
+          tabs, with the catch data tab to the right. For more detailed instructions see below 
+          for step by step documentation.
+        </p>
+        <p>
+          The species and management groupings in this database reflect the Pacific Fishery 
+          Management Council's groupings in the year the catch occurred. These groupings often 
+          change slightly every two years to reflect management changes, so you may need to update 
+          categories to reflect these alterations.  Only fish managed under the Groundfish Fishery 
+          Management Plan or identified as Shared Ecosystem Component species need to be reported.
+        </p>
+        <p>
+          If your catch was speciated to a finer level than the groupings included here, please 
+          combine into the larger category in the database. Similarly, “Unid” grouping categories 
+          account for catch that did or could not be categorized into a more specific sub-category. 
+          For example, sometimes nearshore rockfish are caught but not recorded under their specific 
+          sub-species. In this instance the nearshore rockfish unid category can be used to list 
+          this catch.
+        </p>
+          If a groundfish or Shared Ecosystem Component species or grouping is not included in 
+          the database and a larger category is not appropriate, please contact Kate Richerson 
+          (kate.e.richerson@noaa.gov) and Kayleigh Somers (kayleigh.somers@noaa.gov).  A complete 
+          list of fish managed under the Groundfish Fishery Management Plan or identified as 
+          Shared Ecosystem Component species can be found in section 3.1 of the 
+          <a href="https://www.pcouncil.org/documents/2016/08/pacific-coast-groundfish-fishery-management-plan.pdf/">Pacific Coast Groundfish Fishery Management Plan</a>. 
+        <p>
+
+        </p>
       </div>
     </q-card>
 

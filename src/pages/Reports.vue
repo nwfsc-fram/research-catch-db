@@ -148,8 +148,8 @@ export default class Reports extends Vue {
       }
 
       // now add data
-      dataHolder[key][objRow['permit_number']] = objRow['total_catch_mt'];
-      dataHolder[key].total! += objRow['total_catch_mt'];
+      dataHolder[key][objRow['permit_number']] = objRow['catch_including_mortality'];
+      dataHolder[key].total! += objRow['catch_including_mortality'];
     }
 
     // Step 3 - Re-loop to finish out building strings
@@ -158,7 +158,7 @@ export default class Reports extends Vue {
     for (let pnum of this.permitList) {
       header = header.concat(pnum + ', ');
     }
-    header = header.concat('Total' + '\r\n');
+    header = header.concat('Total Catch Incl Mortality' + '\r\n');
 
     // now take care of rows
     let dataString = '';
