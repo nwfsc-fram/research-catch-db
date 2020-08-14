@@ -367,12 +367,12 @@ export default class PermitDetailsStaff extends Vue {
   }
 
   updatePermitInfo() {
-    // Take out the point of contact field (for now, need to handle this later)
+    // Take out the point of contact field
     let uploadObject = Object.assign(this.$store.state.sPermit.permit);
     delete uploadObject['point_of_contact'];
     delete uploadObject['delivery_date'];
 
-    // TODO: Handle new organization entry
+    // Handle new organization input
     if (uploadObject['organization_name'] === 'Other') {
       delete uploadObject['organization_name'];
       uploadObject['new_org'] = this.permit_info.newOrganization;
@@ -385,7 +385,7 @@ export default class PermitDetailsStaff extends Vue {
         this.saveSuccesfulBlock = true;
         this.saveFailedBlock = false;
       })
-      // TODO: How do I catch a 401 response here?
+      // TODO: Catch a 401 response here
       .catch(error => {
         console.log(error.response.data.message);
         this.errorMessage = 'could not update permit informartion in database';
