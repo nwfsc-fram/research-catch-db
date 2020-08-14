@@ -8,7 +8,7 @@
     "experimentalDecorators": true,
     "module": "esnext",
     "moduleResolution": "node",
-    "baseUrl": ".",
+    "baseUrl": "./gf-research-permits/",
     "types": [
       "quasar",
       "node"
