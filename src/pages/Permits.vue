@@ -151,7 +151,7 @@ export default class Permits extends Vue {
       // Now that the value is deleted from the DB reload the table
       this.selected = [];
       axios
-        .get('rcat/api/v1/permitsview', this.authConfig)
+        .get('rcat/api/v1/mainpermitsview', this.authConfig)
         .then(response => (this.data = response.data));
     } catch (error) {
       console.log(error.response);
@@ -284,7 +284,7 @@ export default class Permits extends Vue {
     const token = authService.getCurrentUser()!.jwtToken!;
     this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
     axios
-      .get('rcat/api/v1/permitsview', this.authConfig)
+      .get('rcat/api/v1/mainpermitsview', this.authConfig)
       .then(response => (this.data = response.data));
     console.log(this.poweruser);
     this.assignColumns();
