@@ -450,9 +450,12 @@ export default class PermitDetailsUser extends Vue {
         'trash',
         'grouping',
         'species',
+        'sciname',
         'totalCatch',
         'depthCaptured',
         'released',
+        'sb',
+        'nb',
         'notes'
       ]
     });
@@ -607,10 +610,10 @@ export default class PermitDetailsUser extends Vue {
 
       // if depth bin or precent released defined, make sure the other exists
       if (
-        (row.depthCaptured && row.depthCaptured !== 'NA' && !row.released) ||
+        (row.depthCaptured && !row.depthCaptured.includes('NA') && !row.released) ||
         (row.released &&
-          Number(row.released) !== 0 &&
-          (!row.depthCaptured || row.depthCaptured === 'NA'))
+          Number(row.released) > 0 &&
+          (!row.depthCaptured || row.depthCaptured.includes('NA')))
       ) {
         return 'Both depth captured and percent released at depth must be defined for '.concat(
           row.grouping!,
@@ -721,7 +724,7 @@ export default class PermitDetailsUser extends Vue {
         console.log(error.response.data.message);
       });
     axios
-      .post('/rcat/api/v1/catchlockyear', {year: this.permit['permit_year']}, this.authConfig)  
+      .post('/rcat/api/v1/lockyear', {year: this.permit['permit_year']}, this.authConfig)  
       .then(response => (this.catchLockedBool = response.data))
       .catch(error => {
         console.log(error.response);
