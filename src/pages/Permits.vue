@@ -193,12 +193,6 @@ export default class Permits extends Vue {
         sortable: true
       },
       {
-        name: 'pointOfContact',
-        label: 'Point of Contact',
-        field: 'point_of_contact',
-        sortable: true
-      },
-      {
         name: 'startDate',
         label: 'Start Date',
         field: 'start_date',
@@ -240,6 +234,12 @@ export default class Permits extends Vue {
           label: 'Issued By',
           field: 'issued_by',
           sortable: true
+        },
+              {
+        name: 'pointOfContact',
+        label: 'Point of Contact',
+        field: 'point_of_contact',
+        sortable: true
         },
         {
           name: 'staffNotes',
