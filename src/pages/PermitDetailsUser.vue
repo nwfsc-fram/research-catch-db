@@ -333,8 +333,6 @@ interface TableRow {
 
 @Component
 export default class PermitDetailsUser extends Vue {
-  // to-do: poc and email will need to be hooked up to
-  // login acccount
   dataURL = null;
   excelFile = null;
   tableLoading = false;
@@ -405,7 +403,9 @@ export default class PermitDetailsUser extends Vue {
   ];
 
   updatePermitInfo() {
-    // Take out the point of contact field
+    // Take out the point of contact field, assigned when
+    // first data submission happens, and vuex store
+    // object probably needs to be refactored
     let uploadObject = Object.assign(this.$store.state.sPermit.permit);
     delete uploadObject['point_of_contact'];
     delete uploadObject['delivery_date'];
@@ -425,6 +425,7 @@ export default class PermitDetailsUser extends Vue {
       });
   }
 
+  // Next few functions are used to read in excel files
   async ingestExcel(event, callback) {
     if (this.excelFile) {
       let f = this.excelFile;
@@ -441,6 +442,9 @@ export default class PermitDetailsUser extends Vue {
     this.tableLoading = false;
   }
 
+  // Formatting of excel must have the same column order,
+  // Also picky about which row it starts at, will cutout
+  // blank rows.
   handleLoading(e) {
     let data = new Uint8Array(e.target.result);
     var workbook = XLSX.read(data, { type: 'array' });
@@ -459,14 +463,16 @@ export default class PermitDetailsUser extends Vue {
         'notes'
       ]
     });
-    // temporarily changing this from 2 to 3, for 2019 catch data testing
+    // slice value of 2 needed for 2019 catch data testing
+    // value of 3 for 2020 and beyond
     this.data = this.catchData.slice(3);
   }
 
   downloadTemplate() {
-    //do nothing
+    //TODO - hook up saving of excel file
   }
 
+  // This fucntionality may need to be refactored
   addRow() {
     let check = false;
     for (let row of this.data) {
@@ -493,8 +499,6 @@ export default class PermitDetailsUser extends Vue {
 
   submitCatch() {
     // first delete any previously submitted data
-    // to-do, should be passing id as part of the url for a delete
-
     axios
       .delete(
         'rcat/api/v1/catch/' + this.permit.research_project_id,
@@ -521,6 +525,7 @@ export default class PermitDetailsUser extends Vue {
       return;
     }
 
+    // Now do new data upload
     if (this.data && this.data.length > 0) {
       let axiosData = {
         research_project_id: this.permit['research_project_id'], // eslint-disable-line
@@ -537,7 +542,7 @@ export default class PermitDetailsUser extends Vue {
           this.saveFailedBlock = false;
           this.submissionConfirmation = true;
         })
-        // TODO: How do I catch a 401 response here?
+        // TODO: Catch a 401 response here?
         .catch(error => {
           console.log(error.response.data.message);
           this.errorMessage = 'could not save catch data to database';
@@ -550,6 +555,8 @@ export default class PermitDetailsUser extends Vue {
     }
   }
 
+  // Run a series of checks on catch data before submitting
+  // to database
   checkCatch() {
     let checkSet = new Set();
     let zeroStripped: TableRow[] = [];
@@ -635,6 +642,8 @@ export default class PermitDetailsUser extends Vue {
     }
   }
 
+
+  // Vuex store getters and setters
   get startDate() {
     return date.formatDate(this.permit['start_date'], 'YYYY-MM-DD');
   }

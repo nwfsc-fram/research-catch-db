@@ -55,6 +55,8 @@ const routes: RouteConfig[] = [
       }
     ]
   },
+  // Separate route to apply a beforeRouteLeave to this page,
+  // means Layout page code is repeated inside GroupingManagement.vue
   {
     path: '/grouping-management',
     name: 'GroupingManagement', 

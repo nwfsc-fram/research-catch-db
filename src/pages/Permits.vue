@@ -235,11 +235,11 @@ export default class Permits extends Vue {
           field: 'issued_by',
           sortable: true
         },
-              {
-        name: 'pointOfContact',
-        label: 'Point of Contact',
-        field: 'point_of_contact',
-        sortable: true
+        {
+          name: 'pointOfContact',
+          label: 'Point of Contact',
+          field: 'point_of_contact',
+          sortable: true
         },
         {
           name: 'staffNotes',
@@ -259,6 +259,8 @@ export default class Permits extends Vue {
     }
   }
 
+
+  // Vuex store setters and getters
   get permit() {
     return this.$store.state.sPermit.permit;
   }
@@ -290,12 +292,5 @@ export default class Permits extends Vue {
     this.assignColumns();
     this.isNew = false;
   }
-  // .then(response => {console.log(response)}, error => {console.log(error);});
-
-  // .then(response => {return const data = response.json(); })
-  // .then(data => console.log(data));
-
-  // .then(response => {return const data = response.json(); })
-  // .then(data => {const resultArray = []; for (let key in data) {resultArray.push(data[key]);}this.users = resultArray});
 }
 </script>

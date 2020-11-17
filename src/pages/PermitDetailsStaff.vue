@@ -323,8 +323,6 @@ export default class PermitDetailsStaff extends Vue {
     }
   ];
 
-  // Make the organization name field indented or something to indicate
-  // it's a temp field?
   checkForOther() {
     if (this.permitOrg === 'Other') {
       this.otherChosen = true;
@@ -341,7 +339,8 @@ export default class PermitDetailsStaff extends Vue {
   saveNewPermit() {
     let uploadObject = Object.assign(this.$store.state.sPermit.permit);
 
-    // Handle new organization entry
+    // Handle new organization entry, organization_name is a temp
+    // field that doesn't go into the database
     if (uploadObject['organization_name'] === 'Other') {
       delete uploadObject['organization_name'];
       uploadObject['new_org'] = this.permit_info.newOrganization;
@@ -367,17 +366,20 @@ export default class PermitDetailsStaff extends Vue {
   }
 
   updatePermitInfo() {
-    // Take out the point of contact field (for now, need to handle this later)
+    // Take out the point of contact field, assigned when
+    // first data submission happens, and vuex store
+    // object probably needs to be refactored
     let uploadObject = Object.assign(this.$store.state.sPermit.permit);
     delete uploadObject['point_of_contact'];
     delete uploadObject['delivery_date'];
 
-    // TODO: Handle new organization entry
+    // Handle new organization entry
     if (uploadObject['organization_name'] === 'Other') {
       delete uploadObject['organization_name'];
       uploadObject['new_org'] = this.permit_info.newOrganization;
     }
 
+    // Push update to database
     axios
       .put('rcat/api/v1/permits', uploadObject, this.authConfig)
       .then(res => {
@@ -385,7 +387,7 @@ export default class PermitDetailsStaff extends Vue {
         this.saveSuccesfulBlock = true;
         this.saveFailedBlock = false;
       })
-      // TODO: How do I catch a 401 response here?
+      // TODO: Catch a 401 response here?
       .catch(error => {
         console.log(error.response.data.message);
         this.errorMessage = 'could not update permit informartion in database';
@@ -394,6 +396,7 @@ export default class PermitDetailsStaff extends Vue {
       });
   }
 
+  // Need to add other to listing returned from database
   get orgOptions() {
     return this.temp
       .map(function(obj) {
@@ -402,6 +405,7 @@ export default class PermitDetailsStaff extends Vue {
       .concat(['Other']);
   }
 
+  // Simple check for start date before end date
   get isValid() {
     if (!this.startDate || !this.endDate) {
       return true;
@@ -410,6 +414,8 @@ export default class PermitDetailsStaff extends Vue {
     }
   }
 
+  // Permit number must match expected formatting
+  // SRP-##-####  or LOA-##-####
   get isPermitNumValid() {
     let re = new RegExp('^(SRP|LOA)-\\d\\d-\\d\\d\\d\\d$');
     return re.test(this.permitNumber);

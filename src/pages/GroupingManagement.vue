@@ -860,6 +860,10 @@ export default class GroupingManagement extends Vue {
     }
   }
 
+
+  // The save changes functionality has to happen in a particular order
+  // to avoid violating constraints on the database, i.e. grouping table
+  // is populated with new grouping before grouping species row is added etc.
   async saveChanges() {
     // Updated and new rows in Grouping Table
     if (Object.keys(this.groupingUpdates).length > 0) {
@@ -986,7 +990,9 @@ export default class GroupingManagement extends Vue {
     // reset edited bool
     this.editedBool = false;
 
-    // repull table data
+    // repull table data to make sure display shows database state
+    // then is something didn't save/delete correctly and made it 
+    // past the checks the user will know immediately
     try {
       await axios
         .get('rcat/api/v1/grouping/' + this.currentYear, this.authConfig)
@@ -1127,6 +1133,8 @@ export default class GroupingManagement extends Vue {
     this.clonedRow = { ...row };
   }
 
+  // Couldn't get this to work, sorted indirectly
+  // with SQL data pull
   customSort(rows, sortBy, descending) {
     const rdata = [...rows];
     if (sortBy) {
@@ -1154,21 +1162,12 @@ export default class GroupingManagement extends Vue {
     return false;
   }
 
-  // beforeRouteLeave (to, from, next) {
-  //   console.log('at least im triggering')
-  //   const answer = window.confirm('Do you really want to leave? you have unsaved changes!');
-  //   if (answer) {
-  //     next();
-  //   } else {
-  //     next(false);
-  //   }
-  // }
-
   leavePage() {
     this.editedBool = false;
     this.$router.push(this.storeToRoute.path);
   }
 
+  // if unsaved edits warn before leaving page
   beforeRouteLeave(to, from, next) {
     if (!this.editedBool) {
       next();

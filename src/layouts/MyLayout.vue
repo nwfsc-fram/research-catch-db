@@ -113,6 +113,9 @@ import Component from 'vue-class-component';
 import { authService } from '@boatnet/bn-auth/lib';
 
 @Component
+// The Vue layout above is also replicated in GroupingManagement.vue
+// in order to get beforeRouteLeave to trigger when leaving the
+// Grouping management page 
 export default class MyLayout extends Vue {
   leftDrawerOpen = false;
   miniState = true;

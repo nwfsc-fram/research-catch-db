@@ -67,6 +67,8 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { authService } from '@boatnet/bn-auth';
 
+
+// Swiped this from boatnet login pages
 @Component
 export default class Login extends Vue {
 
