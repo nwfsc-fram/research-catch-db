@@ -642,7 +642,6 @@ export default class PermitDetailsUser extends Vue {
     }
   }
 
-
   // Vuex store getters and setters
   get startDate() {
     return date.formatDate(this.permit['start_date'], 'YYYY-MM-DD');

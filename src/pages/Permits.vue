@@ -259,7 +259,6 @@ export default class Permits extends Vue {
     }
   }
 
-
   // Vuex store setters and getters
   get permit() {
     return this.$store.state.sPermit.permit;
