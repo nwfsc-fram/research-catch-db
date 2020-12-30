@@ -8,6 +8,8 @@ module.exports = function (ctx) {
       router: 'src/router/index.ts',
       store: 'src/store/index.ts'
     },
+    // https://quasar.dev/quasar-cli/supporting-ts
+    supportTS: true,
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://quasar.dev/quasar-cli/cli-documentation/boot-files
@@ -45,7 +47,7 @@ module.exports = function (ctx) {
       //            (fastest compile time; minimum bundle size; most tedious)
       // * true   - Import everything from Quasar
       //            (not treeshaking Quasar; biggest bundle size; convenient)
-      all: true,
+      importStrategy: 'auto',
 
       components: [],
       directives: [],
@@ -56,8 +58,6 @@ module.exports = function (ctx) {
       ]
     },
 
-    // https://quasar.dev/quasar-cli/cli-documentation/supporting-ie
-    supportIE: false,
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
@@ -66,12 +66,11 @@ module.exports = function (ctx) {
       // showProgress: false,
       // gzip: true,
       // analyze: true,
-      // preloadChunks: false,
       // extractCSS: false,
 
       // https://quasar.dev/quasar-cli/cli-documentation/handling-webpack
       extendWebpack (cfg) {
-        cfg.module.rules.push({
+      /*  cfg.module.rules.push({
           enforce: 'pre',
           test: /\.(js|vue)$/,
           loader: 'eslint-loader',
@@ -79,7 +78,7 @@ module.exports = function (ctx) {
           options: {
             formatter: require('eslint').CLIEngine.getFormatter('stylish')
           }
-        })
+        })*/
       }
     },
 
@@ -124,27 +123,27 @@ module.exports = function (ctx) {
         theme_color: '#027be3',
         icons: [
           {
-            'src': 'statics/icons/icon-128x128.png',
+            'src': 'icons/icon-128x128.png',
             'sizes': '128x128',
             'type': 'image/png'
           },
           {
-            'src': 'statics/icons/icon-192x192.png',
+            'src': 'icons/icon-192x192.png',
             'sizes': '192x192',
             'type': 'image/png'
           },
           {
-            'src': 'statics/icons/icon-256x256.png',
+            'src': 'icons/icon-256x256.png',
             'sizes': '256x256',
             'type': 'image/png'
           },
           {
-            'src': 'statics/icons/icon-384x384.png',
+            'src': 'icons/icon-384x384.png',
             'sizes': '384x384',
             'type': 'image/png'
           },
           {
-            'src': 'statics/icons/icon-512x512.png',
+            'src': 'icons/icon-512x512.png',
             'sizes': '512x512',
             'type': 'image/png'
           }
