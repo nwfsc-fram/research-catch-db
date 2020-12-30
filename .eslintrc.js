@@ -49,6 +49,11 @@ module.exports = {
 
   globals: {
     ga: true, // Google Analytics
+<<<<<<< HEAD
+=======
+   // cordova: true,
+  //  __statics: true,
+>>>>>>> 6c74e0d (upgrading to work with quasar cli v2)
     process: true
   },
 
