@@ -95,7 +95,7 @@
           </q-card-section>
 
           <p>To navigate to the permit listing table, use the left navigation bar. Click on the "Permits" menu item.</p>
-          <q-img src="../statics/permits_tab.png" />
+          <q-img src="permits_tab.png" />
           <br />
           <br />
           <br />
@@ -107,7 +107,7 @@
             of the table. Once the desired permit is found, click the checkbox to the left of the permit
             row and press "SUBMIT CATCH DATA" at the top left of the table.
           </p>
-          <q-img src="../statics/choose_permit.png" />
+          <q-img src="choose_permit.png" />
           <br />
           <br />
           <br />
@@ -117,7 +117,7 @@
             field. The "mortality credits applicable" status is always set to false when permits are first entered into the system,
             so make sure to update this field if needed. To save these changes, press the "SAVE" button at the bottom of the page.
           </p>
-          <q-img src="../statics/permit_details.png" />
+          <q-img src="permit_details.png" />
           <br />
           <br />
           <br />
@@ -128,7 +128,7 @@
             the year of the permit (after filling in all appropriate data in the spreadsheet) and click open. 
             The spreadsheet data will load further down the page in the "Table Entry" section.
           </p>
-          <q-img src="../statics/file_upload.png" />
+          <q-img src="file_upload.png" />
           <br />
           <br />
           <br />
@@ -140,7 +140,7 @@
             buttons on the bottom right of the table. Once all entries have been checked for correctness, 
             submit the catch data with the "SUBMIT CATCH DATA" button on the bottom of the page.
           </p>
-          <q-img src="../statics/catch_data_qa.png" />
+          <q-img src="catch_data_qa.png" />
           <br />
           <br />
           <br />
@@ -152,7 +152,7 @@
             submission can be attempted as many times as needed to fix all data input errors. But keep in mind 
             that a successful submission will overwrite any previously submitted data.
           </p>
-          <q-img src="../statics/submission_error.png" />
+          <q-img src="submission_error.png" />
           <br />
           <br />
           <br />
@@ -166,7 +166,7 @@
             species. Once all catch data has been entered into the table, the submission process can be completed 
             as shown above, by pressing the "SUBMIT CATCH DATA" button at the bottom of the table.
           </p>
-          <q-img src="../statics/add_row.png" />
+          <q-img src="add_row.png" />
         </div>
       </q-slide-transition>
     </q-card>
