@@ -29,14 +29,6 @@
         mini-to-overlay
       >
         <q-list>
-          <q-item to="/login">
-            <q-item-section avatar>
-              <q-icon name="meeting_room" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>User Login</q-item-label>
-            </q-item-section>
-          </q-item>
           <q-item to="/" exact v-if="isAuthorized(['research-catch-staff','research-catch-user'])">
             <q-item-section avatar>
               <q-icon name="home" />
@@ -81,6 +73,14 @@
               <q-item-label>Catch Form <br> Downloads</q-item-label>
             </q-item-section>
         </q-item>
+        <q-item to="/login">
+            <q-item-section avatar>
+              <q-icon name="exit_to_app" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Logout</q-item-label>
+            </q-item-section>
+          </q-item>
         </q-list>
       </q-drawer>
 

@@ -217,7 +217,7 @@
             <div class="row justify-center q-gutter-md">
               <q-btn color="primary" v-if="addRowButton" label="Add Row" @click="addRow" />
               <q-btn
-                color="positive"
+                color="primary"
                 label="Submit Catch Data"
                 @click="submitCatch"
                 :disable="data.length < 1"
@@ -353,7 +353,7 @@ export default class PermitDetailsUser extends Vue {
   depthBinList = ['NA', '0-10', '10-20', '20-30', '30-50', '50-100', '>100'];
   authConfig: object = {};
 
-  catchLockedBool = false;
+  catchLockedBool = true;
 
   data: TableRow[] = [
     {

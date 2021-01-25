@@ -21,8 +21,6 @@
       >
         <template v-slot:top>
           <q-btn
-            flat
-            dense
             v-if="poweruser"
             color="primary"
             label="Add Permit"
@@ -31,8 +29,6 @@
           />
           <q-btn
             class="on-right"
-            flat
-            dense
             color="primary"
             :disable="selected.length === 0"
             :label="editButtonText"
@@ -40,8 +36,6 @@
           />
           <q-btn
             class="on-right"
-            flat
-            dense
             color="primary"
             label="Delete Permit"
             v-if="poweruser"
