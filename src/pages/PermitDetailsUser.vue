@@ -95,12 +95,16 @@
                 outlined
                 v-model="excelFile"
               />
-              <q-btn
-                class="col-2"
-                color="primary"
-                label="Download Template"
-                @click="downloadTemplate"
-              />
+              <a 
+                style="text-decoration:none"
+                href="researchCatchTemplate2020.xlsm"
+                download="researchCatchTemplate2020">
+                  <q-btn
+                    class="col-2"
+                    color="primary"
+                    label="Download Template"
+                  />
+              </a>
             </div>
             <br />
             <q-separator color="primary" />
@@ -387,7 +391,7 @@ export default class PermitDetailsUser extends Vue {
     },
     {
       name: 'depthCaptured',
-      label: 'Depth Captured Bin',
+      label: 'Depth Captured Bin (fm)',
       field: 'depthCaptured'
     },
     {
@@ -466,10 +470,6 @@ export default class PermitDetailsUser extends Vue {
     // slice value of 2 needed for 2019 catch data testing
     // value of 3 for 2020 and beyond
     this.data = this.catchData.slice(3);
-  }
-
-  downloadTemplate() {
-    //TODO - hook up saving of excel file
   }
 
   // This fucntionality may need to be refactored
