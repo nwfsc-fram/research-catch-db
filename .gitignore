@@ -3,6 +3,7 @@
 .thumbs.db
 node_modules
 /config/dbConfig.ts
+/src/config/urlConfig.ts
 /config/dbreConfig.ts
 /src/config/authProxyConfig.json
 /dist
