@@ -178,6 +178,7 @@ import axios from 'axios';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { authService } from '@boatnet/bn-auth/lib';
+import { baseURL } from '../config/urlConfig';
 
 @Component
 export default class Home extends Vue {
@@ -186,7 +187,7 @@ export default class Home extends Vue {
   lorem: string = 'Lorem ipsum dolor sit';
 
   mounted() {
-    axios.defaults.baseURL = process.env.API;
+    axios.defaults.baseURL = baseURL;
     const token = authService.getCurrentUser()!.jwtToken!;
     this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
   }

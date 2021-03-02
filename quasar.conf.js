@@ -62,11 +62,6 @@ module.exports = function (ctx) {
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
-      env: {
-        API: ctx.dev 
-          ? 'https://www.devwebapps.nwfsc.noaa.gov/gf-research-permits'
-          : 'https://www.webapps.nwfsc.noaa.gov/gf-research-permits'
-      },
       scopeHoisting: true,
       // vueRouterMode: 'history',
       // showProgress: false,
