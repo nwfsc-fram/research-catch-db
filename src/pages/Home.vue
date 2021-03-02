@@ -174,6 +174,7 @@
 </template>
 
 <script lang="ts">
+import axios from 'axios';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { authService } from '@boatnet/bn-auth/lib';
@@ -185,6 +186,7 @@ export default class Home extends Vue {
   lorem: string = 'Lorem ipsum dolor sit';
 
   mounted() {
+    axios.defaults.baseURL = 'https://www.devwebapps.nwfsc.noaa.gov/gf-research-permits';
     const token = authService.getCurrentUser()!.jwtToken!;
     this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
   }
