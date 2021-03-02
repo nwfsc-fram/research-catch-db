@@ -186,7 +186,7 @@ export default class Home extends Vue {
   lorem: string = 'Lorem ipsum dolor sit';
 
   mounted() {
-    axios.defaults.baseURL = 'https://www.devwebapps.nwfsc.noaa.gov/gf-research-permits';
+    axios.defaults.baseURL = process.env.API;
     const token = authService.getCurrentUser()!.jwtToken!;
     this.authConfig = { headers: { Authorization: `Bearer ${token}` } };
   }
