@@ -52,8 +52,7 @@
         </q-form>
         <br>
         <div class="column justify-center" style="text-align: center">
-          <router-link to="/" disabled="true">Forgot Password</router-link>
-          <router-link to="/" disabled="true">Change Password</router-link>
+          <router-link to="/username">Set/Reset Password</router-link>
         </div>
       </div>
     </q-page-container>
