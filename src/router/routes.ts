@@ -33,7 +33,8 @@ const routes: RouteConfig[] = [
   {
     path: '/password',
     name: 'Password',
-    component: Password
+    component: Password,
+    props: route => ({ username: route.query.username })
   },
   {
     path: '/',

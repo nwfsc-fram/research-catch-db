@@ -57,6 +57,7 @@
 
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import { authService } from '@boatnet/bn-auth/lib';
 
 @Component
 export default class Username extends Vue {
@@ -64,8 +65,12 @@ export default class Username extends Vue {
   private username = '';
   private showDialog = false;
 
-  private handleSubmit() {
+  private async handleSubmit() {
+    const resetPassword = window.origin + "/#/password?username=" + this.username;
+    const usernamePage = window.origin + "/#/username";
     this.showDialog = true
+    await authService.sendPasswordResetEmail(this.username, 'research-catch',
+      resetPassword, usernamePage);
   }
 
 }
