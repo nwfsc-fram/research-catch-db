@@ -28,30 +28,6 @@
                 outlined
                 ref="password"
                 :type="isPwd ? 'password' : 'text'"
-                v-model="oldPassword"
-                label="Current Password"
-                dense
-                autocorrect="off" autocapitalize="off" spellcheck="false"
-                :rules="[ val => !! val || 'Field is required',
-                          val => val.length >= 12 || 'Please use minimum 12 characters',  
-                          val => /\d/.test(val) || 'Must contain a number',
-                          val => /[a-z]/.test(val) || 'Must contain a lower case character',
-                          val => /[A-Z]/.test(val) || 'Must contain an upper case character',
-                          val => /[!#$%&()`*+,-./:;<=>?_]/.test(val) || 'Must contain a special character: !#$%&()`*+,-./:;<=>?_']"
-            >
-                <template v-slot:append>
-                <q-icon
-                    :name="isPwd ? 'visibility_off' : 'visibility'"
-                    class="cursor-pointer"
-                    @click="isPwd = !isPwd"
-                />
-                </template>
-            </q-input>
-
-            <q-input
-                outlined
-                ref="password"
-                :type="isPwd ? 'password' : 'text'"
                 v-model="newPassword"
                 label="New Password"
                 dense
@@ -61,7 +37,8 @@
                           val => /\d/.test(val) || 'Must contain a number',
                           val => /[a-z]/.test(val) || 'Must contain a lower case character',
                           val => /[A-Z]/.test(val) || 'Must contain an upper case character',
-                          val => /[!#$%&()`*+,-./:;<=>?_]/.test(val) || 'Must contain a special character: !#$%&()`*+,-./:;<=>?_']"
+                          val => /[!#$%&()`*+,-./:;<=>?_]/.test(val) || 'Must contain a special character: !#$%&()`*+,-./:;<=>?_',
+                          val => newPassword === val || 'Must match previously entered new password']"
             >
                 <template v-slot:append>
                 <q-icon
@@ -94,7 +71,8 @@
                 />
                 </template>
           </q-input>
-            <div style="color: red">{{errorMsg}}</div>
+            <div v-if="errorMsg" style="color: red">{{errorMsg}}</div>
+            <div v-else style="color: green">{{successMsg}}</div>
             <div>Password must contain:</div>
           <ul>
               <li>12 characters</li>
@@ -131,20 +109,30 @@ import { Component, Prop } from 'vue-property-decorator';
 @Component
 export default class Password extends Vue {
   @Prop({ default: undefined }) public username!: string;
+  @Prop({ default: undefined }) public SESS!: string;
 
-  private oldPassword = '';
   private newPassword = '';
   private confirmedPassword = '';
   private isPwd = true;
   private errorMsg = '';
+  private successMsg = '';
 
   private async handleSubmit() {
     this.errorMsg = "";
+    this.successMsg = "";
+
+    const appShortName = 'BOATNET_OBSERVER';
+    const appName = 'Research Catch';
+
     try {
-      const e = await authService.resetPassword(this.username, this.oldPassword, 
-        this.newPassword, this.confirmedPassword, "observer");
+      const e = await authService.resetPassword(this.username, this.newPassword,
+        this.confirmedPassword, appShortName, this.SESS, appName);
     } catch (error) {
       this.errorMsg = error;
+    }
+    if (!this.errorMsg) {
+      this.successMsg = 'Success';
+      this.$router.push({ path: '/' });
     }
   }
 

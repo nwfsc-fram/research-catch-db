@@ -34,7 +34,7 @@ const routes: RouteConfig[] = [
     path: '/password',
     name: 'Password',
     component: Password,
-    props: route => ({ username: route.query.username })
+    props: route => ({ username: route.query.username, SESS: route.query.SESS })
   },
   {
     path: '/',

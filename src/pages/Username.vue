@@ -66,11 +66,15 @@ export default class Username extends Vue {
   private showDialog = false;
 
   private async handleSubmit() {
-    const resetPassword = window.origin + "/#/password?username=" + this.username;
+    const resetPasswordURL = window.origin + "/#/password?username=" + this.username;
     const usernamePage = window.origin + "/#/username";
-    this.showDialog = true
-    await authService.sendPasswordResetEmail(this.username, 'research-catch',
-      resetPassword, usernamePage);
+    this.showDialog = true;
+
+    const appName: string = 'Research Catch';
+    const appShortName = 'BOATNET_OBSERVER';
+
+    await authService.sendPasswordResetEmail(this.username, appName, appShortName,
+      resetPasswordURL, usernamePage);
   }
 
 }
