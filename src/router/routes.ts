@@ -6,6 +6,8 @@ import PermitDetailsUser from '../pages/PermitDetailsUser.vue';
 import PermitDetailsStaff from '../pages/PermitDetailsStaff.vue';
 import GroupingManagement from '../pages/GroupingManagement.vue';
 import Reports from '../pages/Reports.vue';
+import Username from '../pages/Username.vue';
+import Password from '../pages/Password.vue';
 import { authService } from '@boatnet/bn-auth/lib';
 
 function isAuthorized(authorizedRoles: string[]) {
@@ -22,6 +24,17 @@ const routes: RouteConfig[] = [
     path: '/login', 
     name: 'Login', 
     component: Login
+  },
+  {
+    path: '/username',
+    name: 'Username',
+    component: Username
+  },
+  {
+    path: '/password',
+    name: 'Password',
+    component: Password,
+    props: route => ({ username: route.query.username, SESS: route.query.SESS })
   },
   {
     path: '/',
