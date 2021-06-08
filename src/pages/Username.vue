@@ -66,7 +66,7 @@ export default class Username extends Vue {
   private showDialog = false;
 
   private async handleSubmit() {
-    const resetPasswordURL = window.origin + "/#/password?username=" + this.username;
+    const resetPasswordURL = window.origin + window.location.pathname + "#/password?username=" + this.username;
     const usernamePage = window.origin + "/#/username";
     this.showDialog = true;
 
