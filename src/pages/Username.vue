@@ -22,6 +22,7 @@
                 dense
                 autocorrect="off" autocapitalize="off" spellcheck="false"
                 label="Username"/>
+            <div style="color: green">{{resultMessage}}</div>
             <div style="text-align: center">
               <q-btn
                 class="full-width"
@@ -33,20 +34,6 @@
               />
             </div>
         </q-form>
-
-        <q-dialog v-model="showDialog">
-          <q-card>
-            <q-card-section>
-              <div class="text-h6">Password email sent</div>
-            </q-card-section>
-            <q-card-section class="row items-center">
-              <span class="q-ml-sm">In a few minutes you will receive an email containing a link to set your password</span>
-            </q-card-section>
-            <q-card-actions align="right">
-              <q-btn flat label="Okay" color="primary" v-close-popup />
-            </q-card-actions>
-          </q-card>
-        </q-dialog>
       </div>
     </q-page-container>
   </q-layout>
@@ -64,6 +51,7 @@ export default class Username extends Vue {
 
   private username = '';
   private showDialog = false;
+  private resultMessage: string = '';
 
   private async handleSubmit() {
     const resetPasswordURL = window.origin + window.location.pathname + "#/password?username=" + this.username;
@@ -73,8 +61,13 @@ export default class Username extends Vue {
     const appName: string = 'Research Catch';
     const appShortName = 'BOATNET_OBSERVER';
 
-    await authService.sendPasswordResetEmail(this.username, appName, appShortName,
-      resetPasswordURL, usernamePage);
+    try {
+      await authService.sendPasswordResetEmail(this.username, appName, appShortName,
+        resetPasswordURL, usernamePage);
+    } catch (error) {
+      console.log(error)
+    }
+    this.resultMessage = 'In a few minutes you will receive an email containing a link to set/reset your password';
   }
 
 }
