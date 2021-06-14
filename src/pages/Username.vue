@@ -22,7 +22,12 @@
                 dense
                 autocorrect="off" autocapitalize="off" spellcheck="false"
                 label="Username"/>
-            <div style="color: green">{{resultMessage}}</div>
+            <q-banner v-if="showDialog" class="bg-grey-3">
+              CHECK YOUR EMAIL. If you have not received the reset password email after a short period of time, please check your spam folder.
+              <template v-slot:action>
+                <q-btn flat color="primary" label="Return to sign in" to="/login"/>
+              </template>
+            </q-banner>
             <div style="text-align: center">
               <q-btn
                 class="full-width"
@@ -51,7 +56,6 @@ export default class Username extends Vue {
 
   private username = '';
   private showDialog = false;
-  private resultMessage: string = '';
 
   private async handleSubmit() {
     const resetPasswordURL = window.origin + window.location.pathname + "#/password?username=" + this.username;
@@ -67,7 +71,6 @@ export default class Username extends Vue {
     } catch (error) {
       console.log(error)
     }
-    this.resultMessage = 'In a few minutes you will receive an email containing a link to set/reset your password';
   }
 
 }
