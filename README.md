@@ -8,9 +8,14 @@ yarn
 ```
 
 ### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
-quasar dev
-```
+1) First get the dev auth server up and running. To do so pull the boatnet repo onto your computer then navigate to the app/dev-auth-server directory and from there run
+```yarn serve```
+
+2) Get the backend running by pulling boatnet-internal [repo](https://github.nwfsc2.noaa.gov/nwfsc-fram-private/boatnet-internal) and run ```yarn serve```
+Note: When running locally, go through browser click advanced and make sure you can see swagger hub ui thing, then code should run locally
+Navigate to: https://localhost:9200/rcat/api-docs 
+
+3) Launch research catchdb by running ```quasar dev```. If needed run yarn to build app and install dependencies. 
 
 ### Lint the files
 ```bash
