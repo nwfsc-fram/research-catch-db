@@ -417,7 +417,7 @@ export default class PermitDetailsStaff extends Vue {
   // Permit number must match expected formatting
   // SRP-##-####  or LOA-##-####
   get isPermitNumValid() {
-    let re = new RegExp('^(SRP|LOA)-\\d\\d-\\d\\d\\d\\d$');
+    let re = new RegExp('^(SRP|LOA)-\\d+-\\d\\d\\d\\d$');
     return re.test(this.permitNumber);
   }
 
