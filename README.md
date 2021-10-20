@@ -2,6 +2,8 @@
 
 A Quasar Framework app. To launch the app locally, first get the backend up and running. Do this by downloading the boatnet-internal repo and navigate to the research-catch-server directory and run yarn serve. Once it's launched check that it is running okay by going to https://localhost:9200/rcat/api-docs verify. Run front end code, research catch by following the instructions below 
 
+To get this up and running, first launch the backend app. To do so download the boatnet-internal repo and navigate to the research-catch-server folder and run yarn serve. Navigate to https://localhost:9200/rcat/api-docs to ensure it's working. Now follow the directions below to get the front end working. 
+
 ## Install the dependencies
 ```bash
 yarn
